@@ -21,7 +21,7 @@ def start_server():
 
     with socketserver.TCPServer(("", PORT), NoCacheHandler) as httpd:
         print("=" * 60)
-        print("居家健身游戏平台 - 键盘操作版")
+        print("居家健身游戏平台")
         print("=" * 60)
         print(f"\n本地服务器已启动!")
         print(f"\n请在浏览器中打开以下地址:")
