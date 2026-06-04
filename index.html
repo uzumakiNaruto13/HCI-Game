@@ -25,40 +25,136 @@
 <body>
 
 <!-- ============================================================ -->
-<!-- 游戏大厅 (默认页面) -->
+<!-- 游戏大厅 (默认页面) — 科幻游戏UI风格 -->
 <!-- ============================================================ -->
 <div id="screen-lobby" class="screen show">
-  <div style="width:100%;max-width:900px;display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.4rem">
-    <h2 class="grad" style="margin:0">🏟️ 选择游戏</h2>
-    <div style="font-size:.9rem;color:#ffcc00">🔥 键盘操作模式</div>
-  </div>
+  <!-- 顶部导航栏 - 蓝色渐变 -->
+  <header class="nav-header">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="nav-logo">⚡</span>
+        <span class="nav-title">居家健身游戏平台</span>
+      </div>
+      <div class="nav-status">
+        <span class="nav-badge nav-badge-glow">🔥 READY</span>
+      </div>
+    </div>
+  </header>
 
-  <div class="cards">
-    <div class="cd selected" data-game="0">
-      <span class="ic">🏃</span>
-      <div class="nm">地铁跑酷</div>
-      <div class="ds">空格/↑=跳跃 · ↓=滑铲<br>Shift=加速 · 无尽奔跑</div>
-      <div class="diff">难度 ★★☆</div>
-      <span class="tag">热门</span>
+  <!-- 主内容区域 -->
+  <main class="lobby-main">
+    <!-- 左侧: 游戏展示大图 -->
+    <div class="hero-panel" id="heroPanel">
+      <div class="hero-visual">
+        <!-- 动态展示不同游戏的视觉 -->
+        <div class="hero-icon-wrap" id="heroIconWrap">
+          <span class="hero-icon" id="heroIcon">🏃</span>
+        </div>
+        <div class="hero-glow" id="heroGlow"></div>
+        <div class="hero-particles">
+          <span class="particle p1"></span>
+          <span class="particle p2"></span>
+          <span class="particle p3"></span>
+          <span class="particle p4"></span>
+          <span class="particle p5"></span>
+          <span class="particle p6"></span>
+        </div>
+        <h1 class="hero-name" id="heroName">地铁跑酷</h1>
+        <p class="hero-desc" id="heroDesc">无尽奔跑 · 挑战极限速度</p>
+        <div class="hero-tags" id="heroTags">
+          <span class="htag">🏃 跑酷</span>
+          <span class="htag">🚂 地铁</span>
+          <span class="htag">⚡ 速度</span>
+        </div>
+      </div>
     </div>
-    <div class="cd" data-game="1">
-      <span class="ic">🏀</span>
-      <div class="nm">科比·投篮挑战</div>
-      <div class="ds">WASD=移动 · 空格=跳跃<br>J=蓄力投篮 · E=捡球 · K=扣篮</div>
-      <div class="diff">难度 ★★★</div>
-      <span class="tag">3D</span>
-    </div>
-    <div class="cd" data-game="2">
-      <span class="ic">💕</span>
-      <div class="nm">心动Galgame</div>
-      <div class="ds">Click/Space=继续 · 1/2/3键选择<br>好感度系统 · 多结局剧情<br><small>Click/Space=Continue · Keys 1-3=Choice</small></div>
-      <div class="diff">难度 ★☆☆</div>
-      <span class="tag">休闲</span>
-    </div>
-  </div>
 
-  <button id="btnPlay" class="bt bt-success" style="margin-top:.8rem">🎮 开始游戏</button>
-  <p style="font-size:.7rem;color:#444466;margin-top:.4rem">← → 方向键切换 · Enter / 空格 开始</p>
+    <!-- 右侧: 游戏信息卡片 & 选择 -->
+    <div class="side-panel">
+      <!-- 游戏选择卡片 -->
+      <div class="game-select-cards" id="gameCards">
+        <div class="gsc selected" data-game="0" id="gsc0">
+          <div class="gsc-inner">
+            <span class="gsc-icon">🏃</span>
+            <div class="gsc-info">
+              <span class="gsc-name">地铁跑酷</span>
+              <span class="gsc-sub">空格跳跃 · ↓滑铲 · Shift加速</span>
+            </div>
+            <div class="gsc-diff">
+              <span class="diff-star">★★</span><span class="diff-star dim">★</span>
+            </div>
+          </div>
+          <div class="gsc-bar gsc-bar-orange"></div>
+        </div>
+        <div class="gsc" data-game="1" id="gsc1">
+          <div class="gsc-inner">
+            <span class="gsc-icon">🏀</span>
+            <div class="gsc-info">
+              <span class="gsc-name">投篮挑战</span>
+              <span class="gsc-sub">WASD移动 · J蓄力投篮 · E捡球</span>
+            </div>
+            <div class="gsc-diff">
+              <span class="diff-star">★★★</span>
+            </div>
+          </div>
+          <div class="gsc-bar gsc-bar-blue"></div>
+        </div>
+        <div class="gsc" data-game="2" id="gsc2">
+          <div class="gsc-inner">
+            <span class="gsc-icon">🎮</span>
+            <div class="gsc-info">
+              <span class="gsc-name">Galgame</span>
+              <span class="gsc-sub">Click/Space继续 · 1/2/3选择 · 多结局</span>
+            </div>
+            <div class="gsc-diff">
+              <span class="diff-star">★</span><span class="diff-star dim">★★</span>
+            </div>
+          </div>
+          <div class="gsc-bar gsc-bar-pink"></div>
+        </div>
+      </div>
+
+      <!-- 操作提示 & 统计预览 -->
+      <div class="info-panel">
+        <div class="info-panel-header">
+          <span>📋 操作预览</span>
+        </div>
+        <div class="info-panel-content" id="infoPanelContent">
+          <div class="key-row"><kbd>空格 / ↑</kbd> <span>跳跃越障</span></div>
+          <div class="key-row"><kbd>↓</kbd> <span>深蹲滑铲</span></div>
+          <div class="key-row"><kbd>Shift</kbd> <span>加速奔跑</span></div>
+        </div>
+      </div>
+
+      <!-- 开始按钮 -->
+      <button id="btnPlay" class="btn-start">
+        <span class="btn-start-text">🎮 开始游戏</span>
+        <span class="btn-start-glow"></span>
+      </button>
+    </div>
+  </main>
+
+  <!-- 底部导航栏 -->
+  <nav class="bottom-nav">
+    <div class="bn-item active" data-nav="0" id="bn0">
+      <span class="bn-dot bn-dot-orange"></span>
+      <span class="bn-icon">🏃</span>
+      <span class="bn-label">跑酷</span>
+    </div>
+    <div class="bn-item" data-nav="1" id="bn1">
+      <span class="bn-dot bn-dot-blue"></span>
+      <span class="bn-icon">🏀</span>
+      <span class="bn-label">投篮</span>
+    </div>
+    <div class="bn-item" data-nav="2" id="bn2">
+      <span class="bn-dot bn-dot-pink"></span>
+      <span class="bn-icon">🎮</span>
+      <span class="bn-label">Galgame</span>
+    </div>
+  </nav>
+
+  <!-- 键盘提示 -->
+  <p class="kb-hint">← → 方向键切换 · Enter / 空格 开始</p>
 </div>
 
 <!-- ============================================================ -->
@@ -110,7 +206,7 @@
       <div class="title">⌨️ 地铁跑酷 · 键盘操作</div>
       <div class="text">空格/↑=跳跃 · ↓=滑铲 · Shift=加速 · 按H键=操作面板</div>
     </div>
-    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn0">退出</button>
+    <button class="bt-quit" id="quitBtn0">✕ 退出</button>
   </div>
 </div>
 
@@ -166,9 +262,9 @@
       <div class="title">⌨️ 科比投篮挑战 · 键盘操作</div>
       <div class="text">WASD=移动 · 空格=跳跃 · J=蓄力投篮 · E=捡球 · K=扣篮 · Q=抢断 · 按H键=操作面板</div>
     </div>
-    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn1">退出</button>
+    <button class="bt-quit" id="quitBtn1">✕ 退出</button>
 
-    <!-- 3D 篮球游戏 UI 元素 (保留) -->
+    <!-- 3D 篮球游戏 UI 元素 -->
     <div id="dialog-box" style="display:none;">
       <div id="dialog-portrait">
         <img id="dialog-portrait-img" src="" alt="角色" />
@@ -199,16 +295,15 @@
     <div id="renpy-container" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:5">
       <p style="color:#fff;text-align:center;margin-top:100px;font-size:16px">Loading Game...<br><small style="color:#aaa">正在加载游戏...</small></p>
     </div>
-    <!-- 中文操作指南面板 -->
-    <div id="galgame-guide" style="display:none;position:absolute;top:8px;right:8px;z-index:35;background:rgba(0,0,0,0.75);color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;font-family:'Microsoft YaHei',Arial,sans-serif;pointer-events:none;max-width:200px;line-height:1.6">
-      <div style="font-weight:bold;color:#ffcc00;margin-bottom:4px">🎮 操作指南</div>
+    <div id="galgame-guide" style="display:none;position:absolute;top:8px;right:8px;z-index:35;background:rgba(10,5,30,0.85);color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;font-family:'Microsoft YaHei',Arial,sans-serif;pointer-events:none;max-width:200px;line-height:1.6;border:1px solid rgba(168,85,247,0.3);">
+      <div style="font-weight:bold;color:#a855f7;margin-bottom:4px">🎮 操作指南</div>
       <div>🖱️ 鼠标点击/空格 → 继续对话</div>
       <div>🔢 按键 1/2/3 → 选择选项</div>
       <div>📜 滚轮向上 → 回看对话</div>
       <div>⏭️ Tab → 快进对话</div>
       <div>💾 右键/Esc → 菜单/存档</div>
     </div>
-    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn2">退出</button>
+    <button class="bt-quit" id="quitBtn2">✕ 退出</button>
   </div>
 </div>
 
@@ -216,25 +311,81 @@
 <!-- 结算页面 -->
 <!-- ============================================================ -->
 <div id="screen-results" class="screen">
-  <h1 class="grad" style="font-size:1.8rem;margin-bottom:.3rem" id="resultTitle">🎉 游戏结束!</h1>
-  <div class="results" id="resultsContent">
-    <section>
-      <div class="stat-grid" id="statGrid">
-        <div class="stat-card"><div class="val" id="rsScore">0</div><div class="lbl">最终得分</div></div>
-        <div class="stat-card"><div class="val" id="rsActions">0</div><div class="lbl">动作次数</div></div>
-        <div class="stat-card"><div class="val" id="rsCal">0</div><div class="lbl">消耗 (kcal)</div></div>
-        <div class="stat-card"><div class="val" id="rsCombo">0</div><div class="lbl">最高连击</div></div>
+  <!-- 顶部导航栏 -->
+  <header class="nav-header">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="nav-logo">⚡</span>
+        <span class="nav-title">游戏结算</span>
       </div>
-    </section>
-    <section>
-      <div class="radar-wrap">
-        <canvas id="radarChart"></canvas>
-        <div class="radar-legend" id="radarLegend"></div>
+      <div class="nav-status">
+        <span class="nav-badge nav-badge-glow">📊 数据统计</span>
       </div>
-    </section>
-    <div class="btn-row">
-      <button id="btnRetry" class="bt bt-primary">🔄 再来一次</button>
-      <button id="btnLobby" class="bt bt-secondary">🏠 返回大厅</button>
+    </div>
+  </header>
+
+  <div class="results-wrapper">
+    <h1 class="result-title grad" id="resultTitle">🎉 游戏结束!</h1>
+
+    <div class="results" id="resultsContent">
+      <!-- 统计卡片 -->
+      <section>
+        <div class="stat-grid" id="statGrid">
+          <div class="stat-card sc-orange">
+            <div class="stat-card-inner">
+              <span class="sc-icon">⭐</span>
+              <div class="val" id="rsScore">0</div>
+              <div class="lbl">最终得分</div>
+            </div>
+            <div class="sc-glow"></div>
+          </div>
+          <div class="stat-card sc-blue">
+            <div class="stat-card-inner">
+              <span class="sc-icon">🎯</span>
+              <div class="val" id="rsActions">0</div>
+              <div class="lbl">动作次数</div>
+            </div>
+            <div class="sc-glow"></div>
+          </div>
+          <div class="stat-card sc-purple">
+            <div class="stat-card-inner">
+              <span class="sc-icon">🔥</span>
+              <div class="val" id="rsCal">0</div>
+              <div class="lbl">消耗 (kcal)</div>
+            </div>
+            <div class="sc-glow"></div>
+          </div>
+          <div class="stat-card sc-pink">
+            <div class="stat-card-inner">
+              <span class="sc-icon">💥</span>
+              <div class="val" id="rsCombo">0</div>
+              <div class="lbl">最高连击</div>
+            </div>
+            <div class="sc-glow"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 雷达图 -->
+      <section>
+        <div class="radar-wrap">
+          <div class="radar-box">
+            <canvas id="radarChart"></canvas>
+          </div>
+          <div class="radar-legend" id="radarLegend"></div>
+        </div>
+      </section>
+
+      <!-- 按钮 -->
+      <div class="btn-row">
+        <button id="btnRetry" class="btn-retry">
+          <span>🔄 再来一次</span>
+          <span class="btn-glow"></span>
+        </button>
+        <button id="btnLobby" class="btn-lobby">
+          <span>🏠 返回大厅</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

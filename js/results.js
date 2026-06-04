@@ -9,7 +9,7 @@ function showResults() {
   UIManager.showScreen('screen-results');
   var stats = STATE.gameStats;
   var actions = STATE.actionStats;
-  var gameNames = ['🏃 地铁跑酷', '🏀 投篮挑战', '💕 心动Galgame'];
+  var gameNames = ['🏃 地铁跑酷', '🏀 投篮挑战', '🎮 Galgame'];
 
   $('resultTitle').textContent = '🎉 ' + gameNames[STATE.gameMode] + ' 结束!';
   $('rsScore').textContent = Math.round(stats.score);
