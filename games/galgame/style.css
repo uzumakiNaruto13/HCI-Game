@@ -1,0 +1,47 @@
+/* ====================================================================
+   games/galgame/style.css — 心动Galgame · 游戏专属样式
+   ==================================================================== */
+
+/* Galgame 全屏容器 */
+.gg-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 对话选项过渡 */
+.gg-container .choice-btn {
+  transition: all 0.2s ease;
+}
+.gg-container .choice-btn:hover {
+  filter: brightness(1.3);
+}
+
+/* 好感度条样式 */
+#affectionBar {
+  background: linear-gradient(90deg, #ef4444, #ec4899, #f472b6);
+  transition: width 0.5s ease;
+}
+#affectionText {
+  color: #f472b6;
+  font-weight: bold;
+}
+
+/* 中文操作指南面板 */
+#galgame-guide {
+  animation: guideFadeIn 0.6s ease;
+}
+@keyframes guideFadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Galgame 文本淡入 */
+.dialog-fade {
+  animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"C:/Users/Uzumaki Naruto/python.exe\" e:/HCI_project/main.py 2>&1)",
+      "PowerShell(robocopy \"D:\\\\����\\\\manba\\\\manba\\\\3Dgame\\\\video\" \"E:\\\\HCI_project\\\\games\\\\hoop\\\\video\" /E /NFL /NDL /NJH /NJS)"
+    ]
+  }
+}

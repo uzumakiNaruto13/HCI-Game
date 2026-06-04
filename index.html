@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>居家健身游戏平台 · 键盘操作版</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="games/subway/style.css">
+<link rel="stylesheet" href="games/hoop/style.css">
+<link rel="stylesheet" href="games/galgame/style.css">
+<!-- Three.js + Cannon-es import map (供投篮游戏模块使用) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "cannon-es": "https://esm.sh/cannon-es@0.20.0"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- 游戏大厅 (默认页面) -->
+<!-- ============================================================ -->
+<div id="screen-lobby" class="screen show">
+  <div style="width:100%;max-width:900px;display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.4rem">
+    <h2 class="grad" style="margin:0">🏟️ 选择游戏</h2>
+    <div style="font-size:.9rem;color:#ffcc00">🔥 键盘操作模式</div>
+  </div>
+
+  <div class="cards">
+    <div class="cd selected" data-game="0">
+      <span class="ic">🏃</span>
+      <div class="nm">地铁跑酷</div>
+      <div class="ds">空格/↑=跳跃 · ↓=滑铲<br>Shift=加速 · 无尽奔跑</div>
+      <div class="diff">难度 ★★☆</div>
+      <span class="tag">热门</span>
+    </div>
+    <div class="cd" data-game="1">
+      <span class="ic">🏀</span>
+      <div class="nm">科比·投篮挑战</div>
+      <div class="ds">WASD=移动 · 空格=跳跃<br>J=蓄力投篮 · E=捡球 · K=扣篮</div>
+      <div class="diff">难度 ★★★</div>
+      <span class="tag">3D</span>
+    </div>
+    <div class="cd" data-game="2">
+      <span class="ic">💕</span>
+      <div class="nm">心动Galgame</div>
+      <div class="ds">Click/Space=继续 · 1/2/3键选择<br>好感度系统 · 多结局剧情<br><small>Click/Space=Continue · Keys 1-3=Choice</small></div>
+      <div class="diff">难度 ★☆☆</div>
+      <span class="tag">休闲</span>
+    </div>
+  </div>
+
+  <button id="btnPlay" class="bt bt-success" style="margin-top:.8rem">🎮 开始游戏</button>
+  <p style="font-size:.7rem;color:#444466;margin-top:.4rem">← → 方向键切换 · Enter / 空格 开始</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- 地铁跑酷游戏 -->
+<!-- ============================================================ -->
+<div id="screen-game-subway" class="screen" style="padding:0">
+  <div class="game-area">
+    <canvas id="gameCanvas0"></canvas>
+
+    <div class="action-guide" id="actionGuide0">
+      <div class="action-guide-title">⌨️ 键盘操作 · 地铁跑酷</div>
+      <div class="action-guide-item"><span class="ag-key">空格 / ↑</span><span class="ag-arrow">→</span><span class="ag-effect">跳跃越障</span></div>
+      <div class="action-guide-item"><span class="ag-key">↓</span><span class="ag-arrow">→</span><span class="ag-effect">深蹲滑铲</span></div>
+      <div class="action-guide-item"><span class="ag-key">Shift</span><span class="ag-arrow">→</span><span class="ag-effect">加速奔跑</span></div>
+      <div class="action-guide-item ag-hint">按H键=隐藏/显示此面板</div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hp-row">
+          <span class="hud-label">HP</span>
+          <div class="hp-bar"><div class="hp-fill" id="hp0" style="width:100%"></div></div>
+          <span class="hp-text" id="hpText0">100%</span>
+        </div>
+        <div>
+          <span class="hud-label">距离</span>
+          <span class="hud-value" id="dist0">0</span>
+          <span style="font-size:.65rem;color:#8888bb"> m</span>
+        </div>
+        <div>
+          <span class="hud-label">连击</span>
+          <span class="hud-value" id="combo0">0</span>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div class="action-hint" id="hint0">🏃 空格跳跃 · ↓滑铲 · Shift加速</div>
+        <div class="countdown" id="timer0">60</div>
+      </div>
+      <div class="hud-right">
+        <div>
+          <span class="hud-label">🔥 消耗</span>
+          <span class="hud-value" id="cal0">0</span>
+          <span style="font-size:.65rem;color:#8888bb"> kcal</span>
+        </div>
+      </div>
+    </div>
+    <div class="feedback" id="fb0"></div>
+    <div class="rules-bar" id="rules0">
+      <div class="title">⌨️ 地铁跑酷 · 键盘操作</div>
+      <div class="text">空格/↑=跳跃 · ↓=滑铲 · Shift=加速 · 按H键=操作面板</div>
+    </div>
+    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn0">退出</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 科比投篮游戏 (3D) -->
+<!-- ============================================================ -->
+<div id="screen-game-hoop" class="screen" style="padding:0">
+  <div class="game-area">
+    <canvas id="gameCanvas1"></canvas>
+
+    <div class="action-guide" id="actionGuide1">
+      <div class="action-guide-title">⌨️ 键盘操作 · 投篮挑战</div>
+      <div class="action-guide-item"><span class="ag-key">WASD / 方向键</span><span class="ag-arrow">→</span><span class="ag-effect">移动角色</span></div>
+      <div class="action-guide-item"><span class="ag-key">空格</span><span class="ag-arrow">→</span><span class="ag-effect">跳跃 (近筐=扣篮)</span></div>
+      <div class="action-guide-item"><span class="ag-key">J 按住/松开</span><span class="ag-arrow">→</span><span class="ag-effect">蓄力投篮</span></div>
+      <div class="action-guide-item"><span class="ag-key">E</span><span class="ag-arrow">→</span><span class="ag-effect">捡球 / 放下球</span></div>
+      <div class="action-guide-item"><span class="ag-key">K</span><span class="ag-arrow">→</span><span class="ag-effect">扣篮</span></div>
+      <div class="action-guide-item"><span class="ag-key">Q</span><span class="ag-arrow">→</span><span class="ag-effect">抢断</span></div>
+      <div class="action-guide-item ag-hint">按H键=隐藏/显示此面板</div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hp-row">
+          <span class="hud-label">HP</span>
+          <div class="hp-bar"><div class="hp-fill" id="hp1" style="width:100%"></div></div>
+          <span class="hp-text" id="hpText1">100%</span>
+        </div>
+        <div>
+          <span class="hud-label">得分</span>
+          <span class="hud-value" id="score1">0</span>
+        </div>
+        <div>
+          <span class="hud-label">命中率</span>
+          <span class="hud-value" id="acc1">--</span>
+          <span style="font-size:.65rem;color:#8888bb">%</span>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div class="action-hint" id="hint1">🏀 WASD移动 · J蓄力投篮 · E捡球</div>
+        <div class="countdown" id="timer1">60</div>
+      </div>
+      <div class="hud-right">
+        <div>
+          <span class="hud-label">🔥 消耗</span>
+          <span class="hud-value" id="cal1">0</span>
+          <span style="font-size:.65rem;color:#8888bb"> kcal</span>
+        </div>
+      </div>
+    </div>
+    <div class="feedback" id="fb1"></div>
+    <div class="rules-bar" id="rules1">
+      <div class="title">⌨️ 科比投篮挑战 · 键盘操作</div>
+      <div class="text">WASD=移动 · 空格=跳跃 · J=蓄力投篮 · E=捡球 · K=扣篮 · Q=抢断 · 按H键=操作面板</div>
+    </div>
+    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn1">退出</button>
+
+    <!-- 3D 篮球游戏 UI 元素 (保留) -->
+    <div id="dialog-box" style="display:none;">
+      <div id="dialog-portrait">
+        <img id="dialog-portrait-img" src="" alt="角色" />
+      </div>
+      <div id="dialog-content">
+        <p id="dialog-text"></p>
+        <span id="dialog-hint">按 F 键继续</span>
+      </div>
+    </div>
+    <div id="charge-bar-container" style="display:none;">
+      <div id="charge-bar">
+        <div id="charge-fill"></div>
+        <div id="charge-recommend" class="charge-indicator"></div>
+      </div>
+    </div>
+    <div id="dunk-badge">
+      <video id="dunk-video" src="games/hoop/video/koulandonghua.mp4" muted playsinline></video>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Galgame LearnToCodeRPG -->
+<!-- ============================================================ -->
+<div id="screen-game-galgame" class="screen" style="padding:0">
+  <div class="gg-container">
+    <canvas id="gameCanvas2" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:10"></canvas>
+    <div id="renpy-container" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:5">
+      <p style="color:#fff;text-align:center;margin-top:100px;font-size:16px">Loading Game...<br><small style="color:#aaa">正在加载游戏...</small></p>
+    </div>
+    <!-- 中文操作指南面板 -->
+    <div id="galgame-guide" style="display:none;position:absolute;top:8px;right:8px;z-index:35;background:rgba(0,0,0,0.75);color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;font-family:'Microsoft YaHei',Arial,sans-serif;pointer-events:none;max-width:200px;line-height:1.6">
+      <div style="font-weight:bold;color:#ffcc00;margin-bottom:4px">🎮 操作指南</div>
+      <div>🖱️ 鼠标点击/空格 → 继续对话</div>
+      <div>🔢 按键 1/2/3 → 选择选项</div>
+      <div>📜 滚轮向上 → 回看对话</div>
+      <div>⏭️ Tab → 快进对话</div>
+      <div>💾 右键/Esc → 菜单/存档</div>
+    </div>
+    <button class="bt bt-secondary" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:auto;font-size:.8rem;padding:.4rem 1.2rem;opacity:.6" id="quitBtn2">退出</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 结算页面 -->
+<!-- ============================================================ -->
+<div id="screen-results" class="screen">
+  <h1 class="grad" style="font-size:1.8rem;margin-bottom:.3rem" id="resultTitle">🎉 游戏结束!</h1>
+  <div class="results" id="resultsContent">
+    <section>
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card"><div class="val" id="rsScore">0</div><div class="lbl">最终得分</div></div>
+        <div class="stat-card"><div class="val" id="rsActions">0</div><div class="lbl">动作次数</div></div>
+        <div class="stat-card"><div class="val" id="rsCal">0</div><div class="lbl">消耗 (kcal)</div></div>
+        <div class="stat-card"><div class="val" id="rsCombo">0</div><div class="lbl">最高连击</div></div>
+      </div>
+    </section>
+    <section>
+      <div class="radar-wrap">
+        <canvas id="radarChart"></canvas>
+        <div class="radar-legend" id="radarLegend"></div>
+      </div>
+    </section>
+    <div class="btn-row">
+      <button id="btnRetry" class="bt bt-primary">🔄 再来一次</button>
+      <button id="btnLobby" class="bt bt-secondary">🏠 返回大厅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 应用模块 (按依赖顺序加载) -->
+<!-- ============================================================ -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ui-manager.js"></script>
+<script src="js/game-engine.js"></script>
+
+<!-- 游戏模块 -->
+<script src="games/subway/game.js"></script>
+<script type="module" src="games/hoop/game.js"></script>
+<script src="games/galgame/renpy-launcher.js"></script>
+
+<script src="js/results.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
