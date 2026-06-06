@@ -9,7 +9,7 @@ label barista_fullstack:
     player @ surprised "{b}全栈{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_fullstack)
     $ topics_to_ask.add(_('Full-Stack'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return    
 
 label barista_devops:
@@ -22,7 +22,7 @@ label barista_devops:
     player @ surprised "{b}DevOps{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_devops)
     $ topics_to_ask.add(_('DevOps'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_machinelearning:
@@ -36,7 +36,7 @@ label barista_machinelearning:
     player @ surprised "{b}机器学习{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_machinelearning)
     $ topics_to_ask.add(_('Machine Learning'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_conference:
@@ -52,7 +52,7 @@ label barista_conference:
     player @ surprised "一个技术{b}会议{/b}……听起来像是精英开发者去的地方。我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_conference)
     $ topics_to_ask.add(_('Conference'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_agile:
@@ -64,7 +64,7 @@ label barista_agile:
     player @ surprised "{b}敏捷{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_agile)
     $ topics_to_ask.add('Agile')
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_api:
@@ -81,7 +81,7 @@ label barista_api:
     player "但有安妮卡帮我，这些东西没那么可怕了。我最好把它加到待办事项里，以后学习。"
     $ todo_list.add_todo(todo_ask_api)
     $ topics_to_ask.add(_('API'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_userexperience:
@@ -95,7 +95,7 @@ label barista_userexperience:
     player @ surprised "{b}用户体验{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_userexperience)
     $ topics_to_ask.add(_('User Experience'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return
 
 label barista_versioncontrol:
@@ -112,5 +112,5 @@ label barista_versioncontrol:
     player @ surprised "{b}版本控制{/b}……那是什么？我最好记下来，以便了解更多。"
     $ todo_list.add_todo(todo_ask_versioncontrol)
     $ topics_to_ask.add(_('Version Control'))
-    player @ smile "Added it to my To-Do list!"
+    player @ smile "已添加到我的待办列表！"
     return

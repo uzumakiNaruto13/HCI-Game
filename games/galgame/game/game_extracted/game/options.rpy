@@ -16,7 +16,7 @@
 ##
 ## The _() surrounding the string marks it as eligible for translation.
 
-define config.name = _("Learn to Code RPG")
+define config.name = _("学编程RPG")
 
 
 ## Determines if the title given above is shown on the main menu screen. Set
@@ -42,16 +42,16 @@ This game was made possible by all the kind people who donate to support freeCod
 
 This project is open source and is currently in beta. If you notice any bugs or have suggestions about accessibility, the interface, the story, or anything at all, please report them on our {a=https://github.com/freeCodeCamp/LearnToCodeRPG}GitHub repo{/a}.
 
-If you are enjoying this game, please {icon=icon-thumbs-up} rate and review us on {a=https://freecodecamp.itch.io/learn-to-code-rpg}itch.io{/a}.
+If you are enjoying this game, please rate and review us on {a=https://freecodecamp.itch.io/learn-to-code-rpg}itch.io{/a}.
 """)
 
 define credits = _p("""
 Creative Lead:
     {a=https://ruolinzheng08.github.io/}Lynn Zheng (Ruolin Zheng){/a}
-    {a=https://github.com/RuolinZheng08/}{icon=icon-github}{/a}
-    {a=https://www.youtube.com/channel/UCZ2MeG5jTIqgzEMiByrIzsw}{icon=icon-youtube}{/a}
-    {a=https://www.linkedin.com/in/ruolin-zheng/}{icon=icon-linkedin}{/a}
-    {a=https://twitter.com/lynnzheng08}{icon=icon-twitter}{/a}
+    {a=https://github.com/RuolinZheng08/}{/a}
+    {a=https://www.youtube.com/channel/UCZ2MeG5jTIqgzEMiByrIzsw}{/a}
+    {a=https://www.linkedin.com/in/ruolin-zheng/}{/a}
+    {a=https://twitter.com/lynnzheng08}{/a}
 
 Coding:
     {a=https://ruolinzheng08.github.io/}Lynn Zheng (Ruolin Zheng){/a}
@@ -265,6 +265,6 @@ init python:
 
 define build.itch_project = "freecodecamp/learn-to-code-rpg"
 
-# define config.mouse_displayable = MouseDisplayable(Text('{color=#000}{size=50}{icon=icon-mouse-pointer}{/size}{/color}'), 0, 0)
+# define config.mouse_displayable = MouseDisplayable(Text('{color=#000}{size=50}{/size}{/color}'), 0, 0)
 
 define config.open_file_encoding = 'utf-8'

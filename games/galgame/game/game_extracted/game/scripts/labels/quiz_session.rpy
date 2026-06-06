@@ -11,13 +11,13 @@ label study_session:
     $ questions_asked = set() 
     while num_questions > 0:
         if num_questions == 4:
-            player neutral "First question."
+            player neutral "第一个问题。"
         elif num_questions == 3:
-            player neutral "Second question."
+            player neutral "第二个问题。"
         elif num_questions == 2:
             player neutral "第三个问题，过半了！"
         elif num_questions == 1:
-            player neutral "Last question."
+            player neutral "最后一个问题。"
 
         $ num_questions -= 1
 
@@ -84,7 +84,7 @@ label trivia_session_questions:
         if num_questions == len(trivia_questions):
             trivia_guy "这是第一个问题。"
         elif num_questions == 1:
-            trivia_guy "Last question."
+            trivia_guy "最后一个问题。"
         else:
             trivia_guy "Next question."
         call trivia_one_question from _call_trivia_one_question
@@ -103,7 +103,7 @@ label trivia_session_questions:
         show business_card at truecenter with zoomin
         trivia_guy "I'm actually a talent recruiter at {b}CupcakeCPU™{/b}. Feel free to apply to our roles. We welcome talent like you."
         hide business_card
-        trivia_guy "Until next time!"
+        trivia_guy "下次见！"
         hide man with dissolve
         player surprised "Uhhh... cool? I guess?"
         player smile "Let's add it to my To-Do list to apply to their company once I'm comfortable with my skill level."
@@ -154,7 +154,7 @@ label interview_session_questions:
         if num_questions == 5:
             interviewer "这是第一个问题。"
         elif num_questions == 1:
-            interviewer "Last question."
+            interviewer "最后一个问题。"
         else:
             interviewer "Next question."
         

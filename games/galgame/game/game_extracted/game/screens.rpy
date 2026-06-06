@@ -255,19 +255,19 @@ screen quick_menu():
             xalign 0.55
             yalign 0.98
 
-            textbutton _("{icon=icon-skip-back} 返回") action Rollback()
+            textbutton _("返回") action Rollback()
 
-            textbutton _("{icon=icon-compass} 历史") action ShowMenu('history')
-            textbutton _("{icon=icon-fast-forward} 快进") action Skip() alternate Skip(fast=True, confirm=True)
-            textbutton _("{icon=icon-play-circle} 自动") action Preference("auto-forward", "toggle")
-            textbutton _("{icon=icon-save} 保存") action ShowMenu('save')
+            textbutton _("历史") action ShowMenu('history')
+            textbutton _("跳过") action Skip() alternate Skip(fast=True, confirm=True)
+            textbutton _("自动") action Preference("auto-forward", "toggle")
+            textbutton _("保存") action ShowMenu('save')
             # textbutton _("Q.Save") action QuickSave()
             # textbutton _("Q.Load") action QuickLoad()
-            textbutton _("{icon=icon-settings} 设置") action ShowMenu('preferences')
+            textbutton _("设置") action ShowMenu('preferences')
 
             # if stats is showing, hide it; else show it
             if stats_unlocked:
-                textbutton _("{icon=icon-smartphone} 状态"):
+                textbutton _("Stats"):
                     action If(
                             renpy.get_screen(PLAYER_PHONE_SCREEN),
                             true=ToggleScreen(PLAYER_PHONE_SCREEN),
@@ -324,7 +324,7 @@ screen main_menu_navigation():
         textbutton "关于" action ShowMenu("about")
 
         # TODO: v2 achievements, glossary etc.
-        textbutton _("Bonus"):
+        textbutton _("奖励"):
             background "gui/button/sticky_note_button_purple.png"
             text_idle_color '#fff'
             action ShowMenu("bonus")
@@ -338,7 +338,7 @@ screen main_menu_navigation():
 
             ## The quit button is banned on iOS and unnecessary on Android and
             ## Web.
-            textbutton _("Quit Game") action Quit(confirm=not main_menu)
+            textbutton _("退出游戏") action Quit(confirm=not main_menu)
 
 style main_menu_navigation_button is gui_button
 style main_menu_navigation_button_text is gui_button_text
@@ -368,34 +368,34 @@ screen game_menu_navigation():
 
         spacing gui.navigation_spacing
 
-        textbutton _("{icon=icon-compass} 历史") action ShowMenu("history")
+        textbutton _("历史") action ShowMenu("history")
 
-        textbutton _("{icon=icon-save} 保存存档") action ShowMenu("save")
+        textbutton _("保存存档") action ShowMenu("save")
 
-        textbutton _("{icon=icon-bookmark} 读取存档") action ShowMenu("load")
+        textbutton _("读取存档") action ShowMenu("load")
 
-        textbutton _("{icon=icon-settings} 设置") action ShowMenu("preferences")
+        textbutton _("设置") action ShowMenu("preferences")
 
         if _in_replay:
 
-            textbutton _("End Replay") action EndReplay(confirm=True)
+            textbutton _("结束回放") action EndReplay(confirm=True)
 
-        textbutton _("{icon=icon-menu} Main Menu") action MainMenu()
+        textbutton _("主菜单") action MainMenu()
 
-        textbutton _("{icon=icon-info} 关于") action ShowMenu("about")
+        textbutton _("关于") action ShowMenu("about")
 
-        textbutton _("{icon=icon-star} Bonus") action ShowMenu("bonus")
+        textbutton _("奖励") action ShowMenu("bonus")
 
         # if renpy.variant("pc") or (renpy.variant("web") and not renpy.variant("mobile")):
 
         #     ## Help isn't necessary or relevant to mobile devices.
-        #     textbutton '{icon=icon-help-circle} ' + "帮助" action ShowMenu("help")
+        #     textbutton '' + "帮助" action ShowMenu("help")
 
         if renpy.variant("pc"):
 
             ## The quit button is banned on iOS and unnecessary on Android and
             ## Web.
-            textbutton _("{icon=icon-x-circle} Quit Game") action Quit(confirm=not main_menu)
+            textbutton _("退出游戏") action Quit(confirm=not main_menu)
 
 style navigation_button is gui_button
 style navigation_button_text is gui_button_text
@@ -621,13 +621,13 @@ screen about():
 
             null height 20
 
-            label _("Credits")
+            label _("制作人员")
             text credits
 
             # for Android Google Play Store compliance
-            text _("This game doesn't collect any user data. Check out our privacy policy {a=https://www.freecodecamp.org/news/privacy-policy/}here{/a}.")
+            text _("本游戏不收集任何用户数据。请在{a=https://www.freecodecamp.org/news/privacy-policy/}这里{/a}查看我们的隐私政策。")
 
-            text _("Made with {a=https://www.renpy.org/}Ren'Py{/a} [renpy.version_only].")
+            text _("使用{a=https://www.renpy.org/}Ren'Py{/a} [renpy.version_only]制作。")
             # text _("Made with {a=https://www.renpy.org/}Ren'Py{/a} [renpy.version_only].\n\n[renpy.license!t]")
 
 
@@ -668,7 +668,7 @@ screen load():
 
 screen file_slots(title):
 
-    default page_name_value = FilePageNameInputValue(pattern=_("Page {}"), auto=_("Automatic saves"), quick=_("Quick saves"))
+    default page_name_value = FilePageNameInputValue(pattern=_("第{}页"), auto=_("自动保存"), quick=_("快速保存"))
 
     use game_menu(title):
 
@@ -710,7 +710,7 @@ screen file_slots(title):
 
                         add FileScreenshot(slot) xalign 0.5
 
-                        text FileTime(slot, format=_("{#file_time}%A, %B %d %Y, %H:%M"), empty=_("empty slot")):
+                        text FileTime(slot, format=_("{#file_time}%A, %B %d %Y, %H:%M"), empty=_("空槽位")):
                             style "slot_time_text"
 
                         text FileSaveName(slot):
@@ -810,8 +810,8 @@ screen preferences():
                 vbox:
                     style_prefix "check"
                     label "快进"
-                    textbutton _("Unseen Text") action Preference("skip", "toggle")
-                    textbutton _("After Choices") action Preference("after choices", "toggle")
+                    textbutton _("未读文本") action Preference("skip", "toggle")
+                    textbutton _("选择后") action Preference("after choices", "toggle")
                     textbutton "过渡效果" action InvertSelected(Preference("transitions", "toggle"))
 
                 ## Additional vboxes of type "radio_pref" or "check_pref" can be
@@ -819,12 +819,12 @@ screen preferences():
 
                 vbox:
                     style_prefix "check"
-                    label _("Features")
-                    textbutton _("Moving Text") action [
+                    label _("功能")
+                    textbutton _("动态文字") action [
                     ToggleField(persistent, 'enable_moving_text'),
                     Function(configure_text_tags)
                     ]
-                    textbutton _("Save Reminder") action ToggleField(persistent, 'enable_save_reminder')
+                    textbutton _("保存提醒") action ToggleField(persistent, 'enable_save_reminder')
 
                 # vbox:
                 #     style_prefix "radio"
@@ -844,16 +844,16 @@ screen preferences():
                     label "文字速度"
 
                     hbox:
-                        text _("Slower")
-                        text _("Faster") xpos 338
+                        text _("更慢")
+                        text _("更快") xpos 338
 
                     bar value Preference("text speed")
 
                     label "自动前进时间"
 
                     hbox:
-                        text _("Less")
-                        text _("More") xpos 338
+                        text _("更少")
+                        text _("更多") xpos 338
 
                     bar value Preference("auto-forward time")
 
@@ -863,8 +863,8 @@ screen preferences():
                         label "音乐音量"
 
                         hbox:
-                            text _("Lower")
-                            text _("Higher") xpos 338
+                            text _("更低")
+                            text _("更高") xpos 338
 
                         hbox:
                             bar value Preference("music volume")
@@ -874,8 +874,8 @@ screen preferences():
                         label "音效音量"
 
                         hbox:
-                            text _("Lower")
-                            text _("Higher") xpos 338
+                            text _("更低")
+                            text _("更高") xpos 338
 
                         hbox:
                             bar value Preference("sound volume")
@@ -1015,7 +1015,7 @@ screen history():
                     substitute False
 
         if not _history_list:
-            label _("The dialogue history is empty.")
+            label _("对话历史为空。")
 
 
 ## This determines what tags are allowed to be displayed on the history screen.
@@ -1085,11 +1085,11 @@ screen help():
 
             hbox:
 
-                textbutton _("Keyboard") action SetScreenVariable("device", "keyboard")
-                textbutton _("Mouse") action SetScreenVariable("device", "mouse")
+                textbutton _("键盘") action SetScreenVariable("device", "keyboard")
+                textbutton _("鼠标") action SetScreenVariable("device", "mouse")
 
                 if GamepadExists():
-                    textbutton _("Gamepad") action SetScreenVariable("device", "gamepad")
+                    textbutton _("手柄") action SetScreenVariable("device", "gamepad")
 
             if device == "keyboard":
                 use keyboard_help
@@ -1102,101 +1102,101 @@ screen help():
 screen keyboard_help():
 
     hbox:
-        label _("Enter")
-        text _("Advances dialogue and activates the interface.")
+        label _("回车")
+        text _("推进对话并激活界面。")
 
     hbox:
-        label _("Space")
-        text _("Advances dialogue without selecting choices.")
+        label _("空格")
+        text _("推进对话而不选择选项。")
 
     hbox:
-        label _("Arrow Keys")
-        text _("Navigate the interface.")
+        label _("方向键")
+        text _("导航界面。")
 
     hbox:
-        label _("Escape")
-        text _("Accesses the game menu.")
+        label _("Esc")
+        text _("访问游戏菜单。")
 
     hbox:
         label _("Ctrl")
-        text _("Skips dialogue while held down.")
+        text _("按住时跳过对话。")
 
     hbox:
         label _("Tab")
-        text _("Toggles dialogue skipping.")
+        text _("切换对话跳过。")
 
     hbox:
         label _("Page Up")
-        text _("Rolls back to earlier dialogue.")
+        text _("回滚到较早的对话。")
 
     hbox:
         label _("Page Down")
-        text _("Rolls forward to later dialogue.")
+        text _("前进到较晚的对话。")
 
     hbox:
         label "H"
-        text _("Hides the user interface.")
+        text _("隐藏用户界面。")
 
     hbox:
         label "S"
-        text _("Takes a screenshot.")
+        text _("截图。")
 
     hbox:
         label "V"
-        text _("Toggles assistive {a=https://www.renpy.org/l/voicing}self-voicing{/a}.")
+        text _("切换辅助{a=https://www.renpy.org/l/voicing}自动语音{/a}。")
 
 
 screen mouse_help():
 
     hbox:
-        label _("Left Click")
-        text _("Advances dialogue and activates the interface.")
+        label _("左键点击")
+        text _("推进对话并激活界面。")
 
     hbox:
-        label _("Middle Click")
-        text _("Hides the user interface.")
+        label _("中键点击")
+        text _("隐藏用户界面。")
 
     hbox:
-        label _("Right Click")
-        text _("Accesses the game menu.")
+        label _("右键点击")
+        text _("访问游戏菜单。")
 
     hbox:
         label _("Mouse Wheel Up\nClick Rollback Side")
-        text _("Rolls back to earlier dialogue.")
+        text _("回滚到较早的对话。")
 
     hbox:
-        label _("Mouse Wheel Down")
-        text _("Rolls forward to later dialogue.")
+        label _("鼠标滚轮下")
+        text _("前进到较晚的对话。")
 
 
 screen gamepad_help():
 
     hbox:
         label _("Right Trigger\nA/Bottom Button")
-        text _("Advances dialogue and activates the interface.")
+        text _("推进对话并激活界面。")
 
     hbox:
         label _("Left Trigger\nLeft Shoulder")
-        text _("Rolls back to earlier dialogue.")
+        text _("回滚到较早的对话。")
 
     hbox:
-        label _("Right Shoulder")
-        text _("Rolls forward to later dialogue.")
+        label _("右肩键")
+        text _("前进到较晚的对话。")
 
 
     hbox:
-        label _("D-Pad, Sticks")
-        text _("Navigate the interface.")
+        label _("方向键、摇杆")
+        text _("导航界面。")
 
     hbox:
-        label _("Start, Guide")
-        text _("Accesses the game menu.")
+        label _("开始、指南")
+        text _("访问游戏菜单。")
 
     hbox:
-        label _("Y/Top Button")
-        text _("Hides the user interface.")
+        label _("Y/顶部按钮")
+        text _("隐藏用户界面。")
 
-    textbutton _("Calibrate") action GamepadCalibrate()
+    textbutton _("校准") action GamepadCalibrate()
 
 
 style help_button is gui_button
@@ -1261,8 +1261,8 @@ screen confirm(message, yes_action, no_action):
                 xalign 0.5
                 spacing 150
 
-                textbutton _("Yes") action yes_action
-                textbutton _("No") action no_action
+                textbutton _("是") action yes_action
+                textbutton _("否") action no_action
 
     ## Right-click and escape answer "no".
     key "game_menu" action no_action
@@ -1310,11 +1310,11 @@ screen skip_indicator():
         background white80
 
         hbox:
-            text _("Skipping")
+            text _("跳过中")
             null width 9
-            text "{icon=icon-chevron-right}" at delayed_blink(0.0, 1.0) # style "skip_triangle"
-            text "{icon=icon-chevron-right}" at delayed_blink(0.2, 1.0)
-            text "{icon=icon-chevron-right}" at delayed_blink(0.4, 1.0)
+            text "" at delayed_blink(0.0, 1.0) # style "skip_triangle"
+            text "" at delayed_blink(0.2, 1.0)
+            text "" at delayed_blink(0.4, 1.0)
 
 
 ## This transform is used to blink the arrows one after another.
@@ -1536,14 +1536,14 @@ screen quick_menu():
             xalign 0.55
             yalign 0.98
 
-            textbutton _("{icon=icon-skip-back} 返回") action Rollback()
-            textbutton _("{icon=icon-fast-forward} 快进") action Skip() alternate Skip(fast=True, confirm=True)
-            textbutton _("{icon=icon-play-circle} 自动") action Preference("auto-forward", "toggle")
-            textbutton _("{icon=icon-menu} 菜单") action ShowMenu()
+            textbutton _("返回") action Rollback()
+            textbutton _("跳过") action Skip() alternate Skip(fast=True, confirm=True)
+            textbutton _("自动") action Preference("auto-forward", "toggle")
+            textbutton _("菜单") action ShowMenu()
 
             # if stats is showing, hide it; else show it
             if stats_unlocked:
-                textbutton _("{icon=icon-smartphone} 状态"):
+                textbutton _("Stats"):
                     action If(
                             renpy.get_screen(PLAYER_PHONE_SCREEN),
                             true=ToggleScreen(PLAYER_PHONE_SCREEN),

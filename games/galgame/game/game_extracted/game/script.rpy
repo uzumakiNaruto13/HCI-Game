@@ -3,10 +3,10 @@ label start:
     scene bg laptop_screen with dissolve
 
     # get some action and conflict in here :)
-    interviewer "So - are you feeling excited?"
-    player "U-um... I definitely am. I'm just a bit nervous..."
-    interviewer "Don't sweat it! Everyone gets nervous during the interviews - even the pros."
-    interviewer "How about we start with your name?"
+    interviewer "那么——你感到兴奋吗？"
+    player "呃……我确实很兴奋。只是有点紧张……"
+    interviewer "别紧张！每个人面试时都会紧张——即使是老手也不例外。"
+    interviewer "我们先从你的名字开始吧？"
     # TODO: more customization like gender, pronouns, life story
 
     $ player_name = renpy.input(_("你的名字？{color=[red]}*{/color}（输入名字后回车，名字将在整个游戏中使用，除非开始新游戏否则无法更改。）"), default=_("Lydia"))
@@ -19,27 +19,27 @@ label start:
     if not player_name:
         $ player_name = _("[player_name]")
 
-    interviewer "It's nice to meet you, [player_name]! So I understand that you're here for our coding interview?"
+    interviewer "很高兴认识你，[player_name]！我了解到你是来参加我们的编程面试的？"
     player "我怕"
 
     menu:
-        interviewer "Great! We'll start whenever you're ready."
+        interviewer "太好了！你准备好了我们就开始。"
 
-        "Guess I have no other options. Let's start!":
+        "看来我别无选择了。开始吧！":
             pass
 
     # timed menu
     $ timeout = 5.0
     # Set the label that is jumped to if the player doesn't make a decision.
     $ timeout_label = "start_interview_question2"
-    interviewer "First question."
+    interviewer "第一个问题。"
     menu:
-        interviewer "Assuming P = NP, how many raccoons is too many raccoons?"
+        interviewer "假设P=NP，多少只浣熊才算太多？"
 
-        "Banana nuts":
+        "香蕉坚果":
             pass
     
-        "I don't know":
+        "我不知道":
             pass
     
         "……":
@@ -49,14 +49,14 @@ label start_interview_question2:
     play sound 'audio/sfx/punch.wav'
     with vpunch
     $ timeout_label = "start_interview_question3"
-    "Second question."
+    "第二个问题。"
     menu:
-        interviewer "In Python, what is a generator?"
+        interviewer "在Python中，什么是生成器？"
     
-        "Banana nuts":
+        "香蕉坚果":
             pass
     
-        "I don't know":
+        "我不知道":
             pass
     
         "……":
@@ -66,14 +66,14 @@ label start_interview_question3:
     play sound 'audio/sfx/punch.wav'
     with hpunch
     $ timeout_label = "start_after_interview"
-    "Third question."
+    "第三个问题。"
     menu:
-        interviewer "How do you think Sasquatch feels about APIs?"
+        interviewer "你觉得大脚怪对API有什么感觉？"
     
-        "Banana nuts":
+        "香蕉坚果":
             pass
     
-        "I don't know":
+        "我不知道":
             pass
     
         "……":
@@ -85,9 +85,9 @@ label start_after_interview:
     play sound 'audio/sfx/punch.wav'
     with vpunch
 
-    interviewer "Thanks for taking the time to complete our coding interview."
-    interviewer "Before you go, please take some time to fill in your basic information so we can get to know you better."
-    interviewer "The fields marked with {color=[red]}*{/color} are required."
+    interviewer "感谢你抽出时间完成我们的编程面试。"
+    interviewer "在你离开之前，请花点时间填写你的基本信息，以便我们更好地了解你。"
+    interviewer "标有{color=[red]}*{/color}的字段为必填项。"
 
     # TODO: birthday Easter Egg
     # "你的生日是什么？"
@@ -97,18 +97,18 @@ label start_after_interview:
 
     # questions with no substantial consequences
     menu:
-        interviewer "How did you hear about this opportunity?"
+        interviewer "你是怎么知道这个机会的？"
     
-        "Email":
-            interviewer "Cool! We're glad that you're here!"
+        "邮件":
+            interviewer "酷！很高兴你来了！"
     
-        "Career fair":
-            interviewer "Awesome! Career fairs are great places to find opportunities."
+        "招聘会":
+            interviewer "太棒了！招聘会是找机会的好地方。"
 
-        "Job posting websites":
-            interviewer "Ah - I knew it'd be worth getting our recruiters to post on those sites!"
+        "招聘网站":
+            interviewer "啊——我就知道让招聘人员在这些网站上发布信息是值得的！"
 
-        "Referral":
+        "内推":
             $ referral_name = renpy.input(_("推荐人的名字是什么？（输入后回车）"))
             # Easter egg :)
             if referral_name in vip_names:
@@ -121,23 +121,23 @@ label start_after_interview:
             else:
                 "嗯……在员工数据库中找不到这个人，也许打错了？"
 
-        "Others (Please specify)":
+        "其他（请注明）":
             $ renpy.input(_("你是怎么知道我们的？（输入后回车）"))
             "不太确定你是怎么通过指定渠道找到这个机会的，但很高兴你来了！"
 
     menu:
-        interviewer "Would you like to opt in to our recruiting email list?"
+        interviewer "你想加入我们的招聘邮件列表吗？"
     
-        "Yes":
-            "Way to go! We'll notify you about all the events and opportunities."
+        "是":
+            "太棒了！我们会通知你所有的活动和机会。"
     
-        "No":
-            "Maybe next time?"
+        "否":
+            "下次再说？"
     
-    interviewer "And that'll be all! Thanks so much for coming, [player_name]."
-    player "N-no, thank you - I appreciate your time."
-    interviewer "We'll call you if we decide we'd like to move you forward to the offer stage."
-    player "Thank you..."
+    interviewer "就这些了！非常感谢你的到来，[player_name]。"
+    player "不，谢谢你——感谢你抽出时间。"
+    interviewer "如果我们决定让你进入录用阶段，会给你打电话的。"
+    player "谢谢你……"
     player "（天哪……我真的不确定面试表现怎么样！）"
     player "（说实话不久前我还是个完全的新手，看看现在的我！）"
     player "（感觉就像昨天才决定自学编程……）"
@@ -155,21 +155,21 @@ label stage1:
 
     # Stage 1. player background
     show boy orange
-    player smile "Okay, we can pick up from here tomorrow."
-    kid "Okay - thanks [player_name]! I appreciate the help."
-    kid "By the way, I'm going to miss my tutoring session tomorrow, so don't wait up."
-    player "What? Mason, are you sure? Your science grades could really use some work."
-    player worry "I don't think we should be missing any sessions."
-    kid "Nah, you've got it all wrong, Ms. Wallflower - I AM taking science classes!"
-    kid "I'm learning how to code in my robotics club after school!"
-    player surprised "Robotics? Jeez... that sounds harder than your advanced physics class."
-    kid "I know - I was surprised too, but it's actually WAY easier - and way more fun!"
-    kid "I get to learn to program, like my older brother. He's a software engineer."
-    kid "My teachers told me that if I take this elective, I'm off the hook for advanced physics."
-    player "Oh yeah?"
-    kid "Yep! And I've been thinking... I really like this stuff. Maybe I'll do it when I grow up?"
-    kid "Anyway, see you Ms. Wallflower!"
-    player smile "Bye Mason."
+    player smile "好的，我们明天从这里继续。"
+    kid "好的——谢谢[player_name]！感谢你的帮助。"
+    kid "对了，我明天不能来辅导课了，所以别等我了。"
+    player "什么？Mason，你确定吗？你的科学成绩真的需要提高。"
+    player worry "我觉得我们不应该错过任何一节课。"
+    kid "不不，你搞错了，壁花小姐——我确实在上科学课！"
+    kid "我在放学后的机器人俱乐部学编程！"
+    player surprised "机器人？天哪……听起来比你的高等物理课还难。"
+    kid "我知道——我也很惊讶，但实际上简单多了——而且有趣多了！"
+    kid "我可以学编程，就像我哥哥一样。他是个软件工程师。"
+    kid "老师告诉我，如果我选这门选修课，就不用上高等物理了。"
+    player "哦是吗？"
+    kid "是的！我一直在想……我真的很喜欢这个东西。也许长大了我也干这个？"
+    kid "总之，再见壁花小姐！"
+    player smile "再见Mason。"
     player neutral "（天哪……Mason才16岁就知道自己想做什么了？）"
     player worry "（毕业8个月了还不知道方向。）"
     player "（同届的好像都安定下来了。）"
@@ -181,11 +181,11 @@ label stage2:
     # player returns home
     scene bg living_room night with blinds
 
-    player "Mom, Dad, I'm home!"
-    dad "[player_name]! How's my little Tulip?"
-    player sweat "Dad! Aren't I a bit old for you to be calling me that?"
+    player "妈妈，爸爸，我回来了！"
+    dad "[player_name]！我的小郁金香怎么样了？"
+    player sweat "爸爸！你不觉得我已经过了被你叫这个的年龄了吗？"
     dad "哎呀你永远不会太大！我还叫你妈Rosie呢，不是吗亲爱的？"
-    mom "You sure do! I love it as much as I did when we first started going steady..."
+    mom "当然喜欢！就像我们刚开始交往时一样喜欢……"
     player "（天哪他俩还是那么恩爱。）"
     player "（换个话题吧。）"
     player -sweat smile "你们俩今天在忙什么？"
@@ -195,11 +195,11 @@ label stage2:
     mom "亲爱的得放下了。"
     dad "嗯Jerry刚从大学毕业就找到了第一份工作，你绝对猜不到他是做什么的！"
     player sweat smile "……以偷蜡笔为生？"
-    mom "He's a software engineer!"
-    player -sweat surprised "Really? Jerry? Jerry Anderson?"
+    mom "他是个软件工程师！"
+    player -sweat surprised "真的吗？Jerry？Jerry Anderson？"
     mom "是啊！他父母说他很喜欢我一直好奇电脑高手做什么。"
-    mom "Something amazing, I'm sure!"
-    mom "Anyway, ready for dinner?"
+    mom "一定是很棒的事情！"
+    mom "总之，准备好吃晚饭了吗？"
     player "（嗯……又一个程序员？奇怪大家都中bug了……）"
     player smile "（嘿电脑bug。）"
     mom "[player_name]？我问你饿了吗？"
@@ -217,44 +217,44 @@ label stage2:
     player "我什么都行！"
 
     scene bg bedroom with blinds
-    player "Phew - I'm stuffed!"
+    player "呼——我吃饱了！"
     mint "喵！"
     player "嘿Mint！我最爱的猫咪好吗？"
     mint "喵！"
     mint "喵？"
     player "是啊……今天有点沮丧。"
     player "开始觉得辅导不够了Mint。"
-    player "Mom and Dad don't mind me living here at all, but want to be able to help out, at least a little."
+    player "爸妈完全不介意我住在这里，但我想至少能帮上一点忙。"
     player worry "挣的钱勉强够付电话费。"
     player worry "也许除了辅导还得再找份工作现在每周只有几次。"
     player neutral "注册求职网站设通知。"
     player "……"
     player "……"
     player surprised "哇——这么快就有回复了？"
-    player surprised "Should I pick up?"
+    player surprised "我应该接吗？"
     menu:
-        "Check phone":
+        "查看手机":
             show smartphone
-            player smile "Looks like I was right - the local cafe down the street is hiring right now."
-            player smile "It looks like they'd like me to come in for an interview. Maybe I can work there?"
-            player "It's right down the road, so I'd just have to walk."
+            player smile "看来我说对了——街对面的本地咖啡馆正在招聘。"
+            player smile "看起来他们想让我去面试。也许我可以在那里工作？"
+            player "就在路边，走路就能到。"
             hide smartphone
             "（恭喜！你做出了第一个选择。）"
             "（选择会影响游戏进程和故事发展。）"
             "（不一定有对错之分……只有后果或奖励！）"
-        "Ignore":
+        "忽略":
             mint "喵！"
             player "你说得对Mint。"
             player "虽然很累但真得看看……"
             show smartphone
-            player "Looks like I was right - the local cafe down the street is hiring right now."
-            player "It looks like they'd like me to come in for an interview. Maybe I can work there?"
+            player "看来我说对了——街对面的本地咖啡馆正在招聘。"
+            player "看起来他们想让我去面试。也许我可以在那里工作？"
             player "就在路边走路就到。"
             hide smartphone
             "（恭喜！你做出了第一个选择。）"
             "（选择会影响游戏进程和故事发展。）"
             "（不一定有对错之分……只有后果或奖励！）"
-    player relieved "Phew! I guess it's a good thing that I answered!"
+    player relieved "呼！看来我接了电话是件好事！"
     player "差点错过机会继续闷闷不乐。"
     "（[player_name]说得对：当你即将做出选择、开始新章节或只是为了安全起见时，保存进度是个好主意。）"
     "（你可以点击屏幕右下角的{b}保存{/b}按钮进行保存。）"
@@ -267,7 +267,7 @@ label stage2:
     player "哦——是Jerry。"
     player "他在新办公室发自拍。"
     player "看起来很酷景色真好！"
-    player "First Mason, and now Jerry? It seems like everyone is learning to program."
+    player "先是Mason，现在是Jerry？好像每个人都在学编程。"
     player "六个月自学然后几乎六位数工作？"
     player "Mason才16岁就能学……"
     player "而Jerry Anderson是……"
@@ -310,7 +310,7 @@ label stage2:
 
     player smile "用手机记录进度。"
     show smartphone at truecenter
-    "（点击文本框右下角的{icon=icon-smartphone}{b}状态{/b}按钮查看你的进度。）"
+    "(Click on the {b}Stats{/b} button on the bottom-right corner of the textbox to view your progress.)"
     "（在那里，你可以追踪你所学的内容、你的精力以及其他有用的信息。）"
 
     hide smartphone
@@ -324,7 +324,7 @@ label stage2_stats_change:
     $ player_stats.change_stats(ENERGY, -5)
 
     player "还有print语句和print()函数一个是Python2一个是Python3？"
-    player "How many Pythons {i}are{/i} there, exactly?"
+    player "到底有多少种Python啊？"
     player "两条蛇已经太多了……"
     $ player_stats.change_stats(CS_KNOWLEDGE, 1)
     player "记得有视频说Python2过时了是不是不用学？"
@@ -382,7 +382,7 @@ label stage3:
     call screen text_over_black_bg_screen(_('Four days later...'))
     scene bg cafe with fadehold
 
-    player smile "Thanks! Come again!"
+    player smile "谢谢！欢迎再来！"
     player neutral "（哇——才几天就感觉会做所有咖啡了。）"
     player "（免费咖啡不错，但闻了这么久有点腻了，也许该去休息一下？）"
 
@@ -477,7 +477,7 @@ label stage3:
     boy "什么？不会吧——电脑俱乐部做什么？打很多游戏？"
     girl "更好——可以学编程甚至做自己的游戏！"
     boy "酷！俱乐部现在学什么？"
-    girl "We're learning about Python! Mr. Stevens runs the club, and he says that we should have a {bt}Hackathon{/bt} so we can all practice."
+    girl "我们在学Python！Stevens老师负责这个俱乐部，他说我们应该举办一个{bt}黑客马拉松{/bt}，这样大家都可以练习。"
     boy "黑客马拉松？那是什么……？"
     girl "嗯据我了解……"
     hide girl
@@ -512,7 +512,7 @@ label stage4:
     pause 1.0
     annika "嘿超级明星！现在方便说话吗？"
     player laugh "当然！刚下班怎么了？想我了？"
-    annika "Ha-ha. You're acting like you don't want the link to the {bt}best programming resource{/bt} that I know!"
+    annika "哈哈。你装得像不想要我知道的{bt}最好的编程资源{/bt}的链接一样！"
     player laugh "好了好了！不逗了——叫什么？"
     annika "就是这个叫[freeCodeCamp]的网站你说今晚想学习所以确保你知道名字！"
     player laugh "谢谢Annika我会的！你最好了！"
@@ -523,7 +523,7 @@ label stage4:
 
     $ todo_unlocked = True
     $ todo_list.add_todo(todo_check_fcc)
-    "（在{icon=icon-smartphone}{b}状态{/b}屏幕上，你可以在显示状态和显示待办事项列表之间切换。）"
+    "(On the {b}Stats{/b} screen, you can toggle between showing your stats and showing your To-Do list.)"
 
     scene bg laptop_screen night with dissolve
     player neutral "看看Annika说的那个很棒的资源。"
@@ -547,7 +547,7 @@ label stage4:
 label stage5:
     player smile "[freeCodeCamp]听着对了！看看。"
     show fcc_curriculum at truecenter with dissolve
-    player happy "Wow. Their curriculum is super comprehensive. They also offer certifications that I can showcase on my résumé. Neat!"
+    player happy "哇。他们的课程非常全面。他们还提供可以在简历上展示的证书。太棒了！"
     player "从哪开始？"
     hide fcc_curriculum
 
@@ -565,7 +565,7 @@ label stage5:
         "JavaScript Algorithms and Data Structures":
             player pout "记得听说过JavaScript，等等也许那是Java？"
             player "算法和数据结构听起来像数学……我数学还行但不是我喜欢的科目。"
-            player "What other curriculum options do I have?"
+            player "我还有其他什么课程选择？"
             jump stage5_choose_curriculum
 
         "Front End Development Libraries" :
@@ -595,10 +595,10 @@ label stage5:
             mint "喵喵~"
             hide mint
             menu:
-                "Let's go grab a cookie from the kitchen":
+                "我们去厨房拿块饼干吧":
                     call stage5_cookie from _call_stage5_cookie
 
-                "Enough cookie talk! Let's go back to studying":
+                "别再聊饼干了！回去学习吧":
                     pass
 
             with vpunch
@@ -639,7 +639,7 @@ label stage5:
             player pout "嗯……我自己能做的基本都研究完了。"
             player neutral "开始碰壁了，也许该让Annika参与进来。"
             $ todo_list.add_todo(todo_ask_curriculum)
-            player smile "Added it to my To-Do list!"
+            player smile "已添加到我的待办列表！"
             player "今天确实完成了些事，至少知道[freeCodeCamp]的课程是什么了，从待办划掉一项。"
             $ todo_list.complete_todo(todo_check_fcc)
             show mint
@@ -750,7 +750,7 @@ label stage5_annika:
     player "可以改天再问Annika其他话题。"
     player "新待办是提升计算机知识。"
     $ todo_list.add_todo(todo_learn_cs)
-    player happy "Sounds like a plan!"
+    player happy "听起来是个好计划！"
     player "该去咖啡师班了。"
 
     call save_reminder from _call_save_reminder_3
@@ -907,13 +907,13 @@ label stage6:
     menu stage6_annika_questions:
         set stage6_annika_questions_visited
 
-        "What topic to ask Annika about?"
+        "要向Annika询问什么话题？"
 
-        "Hackathon":
+        "黑客马拉松":
             call ask_hackathon from _call_ask_hackathon
             jump stage6_annika_questions
 
-        "Hacker Space":
+        "黑客空间":
             player "你说的黑客空间是什么？"
             annika "就是对科技感兴趣的人随便聚聚的地方。"
             annika "有时间强烈建议去看看！"
@@ -926,7 +926,7 @@ label stage6:
 
             jump stage6_annika_questions
 
-        "That's everything I need to know":
+        "这就是我需要知道的一切":
             jump stage6_after_annika_questions
 
 label stage6_after_annika_questions:
@@ -994,9 +994,9 @@ label stage6_after_annika_questions:
 
     pause 1.0
     annika @ laugh "早上好瞌睡虫！"
-    player relieved "Man, you are up {i}early{/i}."
+    player relieved "天哪，你起得{i}真早{/i}。"
     player "我只在甜甜圈店半价日看到你这么兴奋。"
-    annika "I {i}am{/i} a donut fiend. What can I say?"
+    annika "我{i}确实{/i}是个甜甜圈狂魔。我能说什么呢？"
     annika "但今天不是去吃甜甜圈！我说过一起去黑客空间看看，记得吗？"
     annika "准备好出发了吗？"
     player laugh "是的！带路吧。"
@@ -1087,7 +1087,7 @@ label stage7:
 
     scene bg desk with blinds
     show marco laugh
-    marco "Hi [player_name]. I'm Marco. I'm a senior engineer at {b}QuicheQubit{/b}."
+    marco "嗨[player_name]。我是Marco。我是{b}QuicheQubit{/b}的高级工程师。"
     player smile "嗨Marco，很高兴认识你！我是[player_name]刚毕业想成为开发者。"
     marco "听起来不错。"
 
@@ -1111,7 +1111,7 @@ label stage7:
     marco "你知道小公司里每个人都什么都做一点。"
     marco "因网页设计技能被招但偶尔被要求写HTML、CSS和JavaScript来展示设计效果。"
     marco "那些年学了一点HTML、CSS和JavaScript觉得很有趣。"
-    marco "I then found out that there is a term for these skills – front-end development."
+    marco "然后我发现这些技能有一个术语——前端开发。"
     marco "我想酷，做过前端开发也许能成为全职前端开发者。"
     marco "开始研究自学前端，那时互联网资源远没今天多必须非常自给自足制定学习路径。"
     player "（制定完整学习路径对我听起来很紧张但Marco说得好像很容易……）"
@@ -1206,7 +1206,7 @@ label stage7:
     annika "嘿[player_name]！今天有空吗？"
     player smile "嘿Annika有空调出来，怎么了？"
 
-    annika @ laugh "Guess what? It's almost {bt}Hacktober{/bt}. The Hacker Space is holding a special hackathon for high school students."
+    annika @ laugh "你猜怎么着？快到{bt}Hacktober{/bt}了。黑客空间正在为高中生举办一场特别的黑客马拉松。"
 
     show annika
     annika "他们需要志愿者帮忙。"
@@ -1252,8 +1252,8 @@ label stage7:
 
     show annika serious
     annika "好这就是我的面试经历。"
-    annika "I polished my résumé and applied to as many online positions as I could."
-    annika "I also had to highlight parts of my résumé that were specific to the requirements of the jobs I was applying to."
+    annika "我润色了简历，尽可能多地申请了在线职位。"
+    annika "我还必须突出简历中与所申请职位要求相符的部分。"
     annika "然后是漫长等待期间在白板上练习编程面试题。"
     player surprised "白板？"
     annika @ neutral "是啊差点忘了提，你可能以为科技公司用超级花哨工具筛选候选人吧？"
@@ -1272,8 +1272,8 @@ label stage7:
     annika "如果代码有bug还需要在白板上调试没有IDE调试器的便利。"
     player worry "（听起来很紧张……）"
     annika @ laugh "哈哈别怕那基本就是编程面试最可怕的部分没更可怕的了！"
-    annika "There's no shortcut to coding interview prep though, I'd say. I know it's cliché but I'll leave you with the phrase, practice makes perfect."
-    player neutral "Hmmm... I see."
+    annika "不过我觉得编程面试准备没有捷径。我知道这是老生常谈，但送你这句：熟能生巧。"
+    player neutral "嗯……我明白了。"
 
     show annika
     annika "还有关于编程面试的问题吗？"
@@ -1321,7 +1321,7 @@ label stage7:
     player "看看我的进度。"
     if player_stats.player_stats_map[CS_KNOWLEDGE] < cs_knowledge_threshold:
         player "嗯……还需要提升计算机知识，明天继续学习。"
-        "(Try bumping your {b}CS Knowledge{/b} to above [cs_knowledge_threshold] by completing more quizzes.)"
+        "（通过完成更多测验，将你的{b}计算机知识{/b}提升到[cs_knowledge_threshold]以上。）"
 
     while player_stats.player_stats_map[CS_KNOWLEDGE] < cs_knowledge_threshold:
         call day_start from _call_day_start_6
@@ -1480,11 +1480,11 @@ label stage8:
             $ num_jobs_rejected += 1
             play sound 'audio/sfx/social_media_notification.wav'
             player surprised "嗯来自{b}[interview_company_name]{/b}的邮件？对，面试一周了。"
-            player "The title says 'Interview Follow-up'..."
-            player worry "The last thing I need in my inbox is a rejection letter first thing in the morning..."
-            player pout "But I have to face it."
+            player "标题写着'面试跟进'……"
+            player worry "我收件箱里最不想要的就是一大清早收到拒信……"
+            player pout "但我必须面对它。"
             call screen company_rejection_email_screen(interview_company_name)
-            player worry "Well... Guess I need to work harder."
+            player worry "嗯……看来我需要更加努力。"
             "（嘿别这么沮丧好吗？编程面试很难我们都知道，所以才要好好准备，学习时多做些模拟题吧？）"
             show mint
             mint "喵……"
@@ -1504,20 +1504,20 @@ label stage8:
     # once we break out of this loop, show the offer screen
     play sound 'audio/sfx/social_media_notification.wav'
     player surprised "嗯来自{b}[offer_company_name]{/b}的邮件？面试一周了。"
-    player "The title says 'Interview Follow-up'..."
-    player worry "The last thing I need in my inbox is a rejection letter first thing in the morning..."
-    player "But who knows? It could be a request for follow-up interviews, or even better!"
+    player "标题写着'面试跟进'……"
+    player worry "我收件箱里最不想要的就是一大清早收到拒信……"
+    player "但谁知道呢？可能是要求后续面试，甚至更好的消息！"
     player relieved "（深呼吸……）"
     player neutral "好，准备好看了。"
     call screen company_offer_email_screen(offer_company_name)
-    player surprised "Huh? Is this a dream?"
+    player surprised "嗯？这是梦吗？"
 
     show mint with vpunch
     play sound 'audio/sfx/punch.wav'
     mint "喵！"
     player pout "嗷Mint……你好重……别这样扑我好吗？"
     player surprised "等等！Mint刚砸到我身上我感受到了冲击，说明这不是梦。"
-    player "So this is real."
+    player "所以这是真的。"
     mint "喵喵！"
     hide mint
 
@@ -1601,54 +1601,54 @@ label stage14:
     player neutral "嘿Layla介意我问你在这公司和团队多久了？"
     layla "当然两年了大学时在这里实习毕业后直接回来全职。"
     player surprised "所以你是计算机专业的？"
-    layla "Yep."
-    player worry "(No wonder Layla was able to blend in so well...)"
+    layla "是的。"
+    player worry "（难怪Layla融入得这么好……）"
 
     show layla serious
     layla "请别那样看我'计算机专业的孩子进入科技界一定很容易'对吧？"
     layla "但那不是全部你知道。"
     player pout "哎呀抱歉。"
     layla @ neutral "没什么我能理解你的想法。"
-    layla "Have you heard of the term imposter syndrome?"
+    layla "你听说过冒名顶替综合征这个词吗？"
     menu:
-        "Do you know what imposter syndrome is?"
+        "你知道什么是冒名顶替综合征吗？"
         "是的。":
             player "对，就是那种觉得大家都比你强你是冒牌货的感觉。"
-            player worry  "To be honest, I feel that quite often."
+            player worry  "说实话，我经常有这种感觉。"
         "不。":
-            player surprised "Care to explain?"
+            player surprised "能解释一下吗？"
             layla "就是觉得别人都比你聪明能干。"
-            layla "That you are a fraud, despite all of your education and achievements."
-            player worry "Uhhh... I know that feeling..."
-            layla "Not the best feeling, huh?"
+            layla "即使有那么多教育和成就，你仍然觉得自己是个骗子。"
+            player worry "呃……我知道那种感觉……"
+            layla "不是最好的感觉，对吧？"
     layla @ neutral "别担心你很棒，这在科技界几乎是常态。"
-    layla "Hah. Would you believe me if I told you that imposter syndrome hits CS students equally hard, if not harder?"
-    player surprised "Ummm... Tell me about it."
-    layla "It starts the first time we step into a CS classroom, maybe earlier."
-    layla "There is always that kid that sits in the front row, who has been coding since five and knows everything the professor has yet to talk about."
+    layla "哈。如果我告诉你冒名顶替综合征对计算机专业学生的打击同样严重，甚至更严重，你信吗？"
+    player surprised "嗯……跟我说说。"
+    layla "从我们第一次走进计算机科学教室就开始了，也许更早。"
+    layla "总有一个坐在前排的孩子，五岁就开始编程，教授还没讲的东西他全知道。"
     player pout "那……挺紧张的。"
     layla "而且有种期望是计算机专业的大一暑假就该有大厂实习。"
-    layla "Definitely not later than their junior year summer. Otherwise, the myth goes that they are unhirable."
-    layla "I spent my freshman and sophomore summers volunteering at a local school teaching kids to code."
+    layla "绝对不能晚于大三暑假。否则，据传说他们就找不到工作了。"
+    layla "我大一和大二的暑假都在当地学校志愿教孩子们编程。"
     layla "我倒是觉得没什么问题，我爱编程也爱教学，能把这传给下一代感觉很棒。"
     player smile "（难怪Layla志愿去黑客空间指导孩子。）"
-    layla "But my friends were either interning for big name companies or building their own startups during the summer."
-    layla "They were nice enough not to say anything to my face, but I always felt a strange sense of hollowness when I saw them post about their intern perks or startup progress."
-    layla "It was a rough time, but my friends and my college advisors were supportive, and I eventually come to terms with being who I am and contributing to causes that I care about."
+    layla "但我的朋友们暑假要么在大公司实习，要么在创建自己的创业公司。"
+    layla "他们很好，没有当着我的面说什么，但每当我看到他们发布实习福利或创业进展时，总有一种奇怪的空虚感。"
+    layla "那是一段艰难的时期，但我的朋友和大学导师都很支持我，我最终接受了自己，并为关心的事业做出贡献。"
     player pout "（哇……没想到冒名顶替综合征对每个人都这么严重。）"
 
     show layla neutral
     layla "哈哈抱歉吐槽了，不是想吓你不想继续在科技界工作。"
     layla "只是与冒名顶替综合征的斗争是持续的，每一点小胜利都是胜利。"
     layla "其实我现在还在跟冒名顶替综合征斗争，每次遇到不了解的东西都得忍住不撞桌子。"
-    player smile "Wow. Haha. Thanks for sharing. That actually makes me feel a lot better."
-    layla @ laugh "You are very welcome."
-    layla "So, what else would you like to know about me or my role?"
+    player smile "哇。哈哈。谢谢分享。这确实让我感觉好多了。"
+    layla @ laugh "不客气。"
+    layla "那么，你还想了解我或我的职位的什么？"
 
     default layla_story_choices = set()
     menu layla_story_choices:
         set layla_story_choices
-        "What was your experience like when you first joined?":
+        "你刚加入时的经历是怎样的？":
             player "Would you mind telling me about your experience when you first joined this company?"
             layla @ laugh "没问题！"
             layla "Like you, I also had an on boarding buddy. He was a few years ahead of me. Very knowledgeable and chill guy."
@@ -1679,7 +1679,7 @@ label stage14:
             player @ laugh "问完了！"
             layla @ neutral"嘿嘿[player_name]你是个有趣的人，一定会喜欢开发者工作的。"
 
-    layla @ laugh "Are we now ready to go back and squash some bugs?"
+    layla @ laugh "我们现在准备好回去消灭一些bug了吗？"
     player laugh "带路！"
 
 label v1_ending:
@@ -1689,42 +1689,42 @@ label v1_ending:
 
     $ check_counter = 2 # start on double-checking, go thru double, triple, quadruple
     menu ending_check_code:
-        player "Should I check my code some more?"
+        player "我应该再检查一下代码吗？"
 
         "再检查一遍代码！" if check_counter == 2:
             $ check_counter += 1
             player "……"
-            player "Looks good to me."
-            player "But maybe I should still triple-check it?"
+            player "看起来没问题。"
+            player "但也许我还应该三检？"
             jump ending_check_code
 
         "再检查第三遍！" if check_counter == 3:
             $ check_counter += 1
             player "……"
-            player "Looks good to me."
-            player "But maybe I should still quadruple-check it?"
+            player "看起来没问题。"
+            player "但也许我还应该四检？"
             jump ending_check_code
 
         "再检查第四遍！" if check_counter == 4:
             $ check_counter += 1
             player "……"
-            player "Looks good to me."
+            player "看起来没问题。"
             player relieved "检查了无数次了……"
 
             $ add_achievement(plot_double_check)
             
-            player smile "It should be good to go, right?"
+            player smile "应该可以提交了吧？"
             # proceed with plot
 
-        "Looks good to go!":
+        "看起来可以提交了！":
             player laugh "确认可以提交了！"
             # proceed with plot
 
     player "提交到服务器吧。"
     # TODO: system processing animation
     play sound 'audio/sfx/system_processing.wav'
-    player neutral "... And nothing happened."
-    player worry "Hmm... my changes should at least do something to the code base. Maybe I can check if Layla is in... "
+    player neutral "……什么都没有发生。"
+    player worry "嗯……我的改动至少应该对代码库做点什么。也许我可以看看Layla在不在……"
 
     # stop the music here
     # $ continue_looping_music = False
@@ -1741,7 +1741,7 @@ label v1_ending:
 
     $ add_achievement(
         achievement_name=ending_dev,
-        title=_("{color=[red]}{icon=icon-alert-triangle} Attention{/color}"),
+        title=_("{color=[red]}Attention{/color}"),
         message=_("Hey [player_name]... \nThe thing is, it looks like... \n{sc}{color=[red]}YOU HAVE BROUGHT DOWN THE PRODUCTION SERVER{/color}{/sc}"),
         ok_text=_("Oopsy... Am I... fired?"),
         show_achievements_count=False
@@ -1782,23 +1782,23 @@ label v2_start:
     $ calendar.next_weekday()
     $ calendar_enabled = True
     scene bg bedroom with dissolve
-    player relieved "A lot has happened in this past month..."
-    "(After you broke prod on the first day of work, Layla, the team, and your manager insisted that it was okay, and you didn't have to worry.)"
-    "(That being said, they didn't end up renewing your contract.)"
-    "(So after applying for a few more jobs, and more long nights of preparation, you landed a new one!)"
-    "(You start today as ConsultMe Consulting Company's newest, fulltime, junior full stack engineer!)"
+    player relieved "过去一个月发生了很多事……"
+    "（在你第一天上班就把生产环境搞崩之后，Layla、团队和你的经理都坚持说没关系，你不用担心。）"
+    "（话虽如此，他们最终没有续签你的合同。）"
+    "（于是又申请了几份工作，又经历了更多漫长的准备之夜后，你找到了一份新工作！）"
+    "（今天你作为ConsultMe咨询公司最新的全职初级全栈工程师开始工作！）"
 
     scene bg company1_reception with fadehold
     play sound 'audio/sfx/office_ambient.wav'
-    player surprised "So this is ConsultMe! Wow... It's enormous."
-    player smile "I put in the work to become a developer, and today, it's real... "
-    player "I'm going to keep working hard and learn everything I can! Doing that is what got me here, so if I keep it up, I should be okay!"    
-    player "Um... hello?"
+    player surprised "这就是ConsultMe！哇……好大。"
+    player smile "我努力成为了开发者，今天，这是真的……"
+    player "我会继续努力，尽可能多地学习！正是这样做让我走到了今天，所以坚持下去应该没问题！"    
+    player "嗯……你好？"
     show maria
-    receptionist @ smile "Hello! How can I help you?"
-    player "My name is [player_name], and this is my first day."
-    receptionist @ laugh "Ah, the new hire! And so punctual too - it's nice to meet you!"
-    receptionist smile "My name is Maria, and I'll be showing you around!"
+    receptionist @ smile "你好！有什么可以帮你的？"
+    player "我叫[player_name]，今天是我第一天上班。"
+    receptionist @ laugh "啊，新员工！而且还这么准时——很高兴见到你！"
+    receptionist smile "我叫Maria，我来带你参观一下。"
     player "明白了！"
 
     scene bg company1_center with blinds
@@ -1949,8 +1949,8 @@ label v2_start:
             player "What is PII? Or ETA? What on earth is PEBCAK?"
             annika laugh "Hehehe... that last one is actually pretty funny."
             player worry "Annika！"
-            player pout "This isn't funny at all. I'm freaking out!"
-            annika "Sorry, sorry!"
+            player pout "这一点也不好笑。我要疯了！"
+            annika "抱歉，抱歉！"
             annika "Things will be okay. The truth is, every industry has their own acronyms. Some companies even have their own acronyms."
             annika "So I could try to tell you what they all are, but I probably won't know them all."
             annika "The good news is, most companies are totally fine with you learning these things as you go!"

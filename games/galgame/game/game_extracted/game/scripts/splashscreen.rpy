@@ -31,7 +31,7 @@ label splashscreen:
 
         if local_version != itch_version:
             call screen confirm(
-                _("We've released a new version on itch.io that contains bug fixes and feature enhancements. Would you like to download the new version now?"),
+                _("我们在itch.io上发布了包含bug修复和功能增强的新版本。你想现在下载新版本吗？"),
                 OpenURL(itch_url),
                 Return()
                 )
@@ -63,9 +63,9 @@ label splashscreen:
         Accessibility Tips: To enable auto-voicing of the text, please first configure the speech synthesis settings (speaker gender, accent, etc.) on your computer according to {a=https://www.renpy.org/doc/html/self_voicing.html#speech-synthesis}these instructions{/a}.
         Back to the game, you may press the {b}{u}v{/u}{/b} key to switch on auto-voicing.
 
-        Adjust the volume of music and sound effects on the {icon=icon-settings} Settings screen.
+        Adjust the volume of music and sound effects on the Settings screen.
 
-        Press the {b}{u}Esc{/u}{/b} key to access the {icon=icon-grid}Game Menu at any time during the game.
+        Press the {b}{u}Esc{/u}{/b} key to access the Game Menu at any time during the game.
         """)
     # use a lighter background because the hyperlinks are dark blue
     scene main_menu overlay with dissolve
@@ -83,7 +83,7 @@ label splashscreen:
 
         If you notice any bugs or have suggestions about accessibility, the interface, the story, or anything at all, please report them on our {a=https://github.com/freeCodeCamp/LearnToCodeRPG}GitHub repo{/a}. Please always download the latest version of the game from {a=https://freecodecamp.itch.io/learn-to-code-rpg}itch.io{/a} as we continuously update the builds to address your feedback.
 
-        If you are enjoying this game, please {icon=icon-thumbs-up} rate and review us on {a=https://freecodecamp.itch.io/learn-to-code-rpg}itch.io{/a} and {icon=icon-star} star our {a=https://github.com/freeCodeCamp/LearnToCodeRPG}GitHub repo{/a}.
+        If you are enjoying this game, please rate and review us on {a=https://freecodecamp.itch.io/learn-to-code-rpg}itch.io{/a} and star our {a=https://github.com/freeCodeCamp/LearnToCodeRPG}GitHub repo{/a}.
         """)
     # use a lighter background because the hyperlinks are dark blue
     show text "{size=48}[beta_disclaimer!t]{/size}"

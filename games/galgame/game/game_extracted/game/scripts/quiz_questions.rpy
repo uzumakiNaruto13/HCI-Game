@@ -29,7 +29,7 @@ screen quiz_question_answer_explanation_screen(quiz_question):
                 text quiz_question.explanation
 
             if quiz_question.learn_more_url:
-                textbutton _("{icon=icon-help-circle} 了解更多"):
+                textbutton _("Learn More"):
                     hovered Notify(_('Learn more about this topic in an article!'))
                     action OpenURL(quiz_question.learn_more_url)
 

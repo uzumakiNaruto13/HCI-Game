@@ -205,9 +205,9 @@ init python:
     def get_stats_change_direction_icon(stats, changed_stats, change_direction):
         if stats == changed_stats:
             if change_direction == CHANGE_DIRECTION_INC:
-                return '{icon=icon-chevrons-up}'
+                return ''
             elif change_direction == CHANGE_DIRECTION_DEC:
-                return '{icon=icon-chevrons-down}'
+                return ''
         return ''
 
 transform alpha_dissolve:
@@ -277,27 +277,27 @@ screen player_stats_screen(changed_stats, change_direction):
         # Money
         if MONEY in player_stats.player_stats_map:
             $ val = player_stats.player_stats_map[MONEY]
-            text _('{icon=icon-shopping-bag} Money') color gui.accent_color
+            text _('Money') color gui.accent_color
             text '$' + str(val) + '  ' + get_stats_change_direction_icon(MONEY, changed_stats, change_direction)
             null width 200
 
         # Energy
         $ val = player_stats.player_stats_map[ENERGY]
-        text _('{icon=icon-zap} Energy') color gui.accent_color
+        text _('Energy') color gui.accent_color
         bar value val range 100 xalign 0.5 yalign 0.9 xmaximum 200 at alpha_dissolve
         text str(val) + '  ' + get_stats_change_direction_icon(ENERGY, changed_stats, change_direction)
 
         # Renown
         if RENOWN in player_stats.player_stats_map:
             $ val = player_stats.player_stats_map[RENOWN]
-            text _('{icon=icon-award} Renown') color gui.accent_color
+            text _('Renown') color gui.accent_color
             bar value val range 100 xalign 0.5 yalign 0.9 xmaximum 200 at alpha_dissolve
             text str(val) + '  ' + get_stats_change_direction_icon(RENOWN, changed_stats, change_direction)
 
         # CS Knowledge
         if CS_KNOWLEDGE in player_stats.player_stats_map:
             $ val = player_stats.player_stats_map[CS_KNOWLEDGE]
-            text _('{icon=icon-terminal} CS Knowledge') color gui.accent_color
+            text _('CS Knowledge') color gui.accent_color
             bar value val range 100 xalign 0.5 yalign 0.9 xmaximum 200 at alpha_dissolve
             text str(val) + '  ' + get_stats_change_direction_icon(CS_KNOWLEDGE, changed_stats, change_direction)
 
@@ -306,7 +306,7 @@ screen player_stats_screen(changed_stats, change_direction):
             for skill in player_stats.subcategory_stats_map:
                 $ skill_name = all_skills[skill]
                 $ val = player_stats.subcategory_stats_map[skill]
-                text "    {icon=icon-code} [skill_name!t]" color gui.accent_color
+                text "    [skill_name!t]" color gui.accent_color
                 bar value val range 100 xalign 0.5 yalign 0.9 xmaximum 200 at alpha_dissolve
                 text str(val) + '  ' + get_stats_change_direction_icon(skill, changed_stats, change_direction)
 
@@ -314,6 +314,6 @@ screen todo_screen():
     vbox:
         spacing 5
         for todo in todo_list.incomplete:
-            text '    {icon=icon-square}    ' + todo
+            text '    ' + todo
         for todo in todo_list.completed:
-            text '    {icon=icon-check-square}    ' + todo color gui.insensitive_color
+            text '    ' + todo color gui.insensitive_color

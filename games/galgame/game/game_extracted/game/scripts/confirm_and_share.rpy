@@ -40,7 +40,7 @@ screen confirm_and_share_screen(title, message=None, ok_text=None, tweet_content
                 text _("已解锁成就数：[num_achievements] / [total_num_achievements]"):
                     xalign 0.5
 
-            textbutton _("{icon=icon-twitter} Tweet this"):
+            textbutton _("Tweet this"):
                 xalign 0.5
                 action OpenURL(tweet_content_url)
 

@@ -116,7 +116,7 @@ screen shop_screen(shop_items):
 
         label _('Item Shop') xalign 0.5
 
-        text _('{icon=icon-shopping-bag} Money: $') + str(player_stats.player_stats_map[MONEY]) xalign 0.5 text_align 0.5
+        text _('Money: $') + str(player_stats.player_stats_map[MONEY]) xalign 0.5 text_align 0.5
 
         hbox:
             spacing 10
@@ -147,13 +147,13 @@ screen shop_screen(shop_items):
                 text _('Price: $') + str(item_on_display.price) xalign 0.5 text_align 0.
                 if not isinstance(item_on_display, RoomItem):
                     text _('Quantity held: ') + str(player_stats.food_inventory[item_on_display.name]) xalign 0.5 text_align 0.5
-                textbutton '{icon=icon-shopping-cart} ' + _('Purchase Item'):
+                textbutton '' + _('Purchase Item'):
                     xalign 0.5
                     text_align 0.5
                     if player_stats.can_purchase_item(item_on_display):
                         action Function(player_stats.purchase_item, item_on_display)
 
-        textbutton '{icon=icon-log-out} ' + _('Exit Shop'):
+        textbutton '' + _('Exit Shop'):
             action Return()
             xalign 0.5
 

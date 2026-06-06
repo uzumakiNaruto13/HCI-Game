@@ -45,9 +45,9 @@ screen select_song_screen(songs):
                 side_xalign 0.5
 
                 # header row
-                label _('{icon=icon-music} Song Name') xysize cell_size
-                label _('{icon=icon-chevrons-up} Highest Score') xysize cell_size
-                label _('{icon=icon-star} % Perfect Score') xysize cell_size
+                label _('Song Name') xysize cell_size
+                label _('Highest Score') xysize cell_size
+                label _('% Perfect Score') xysize cell_size
 
                 # body rows
                 for song in songs:
@@ -60,7 +60,7 @@ screen select_song_screen(songs):
                     text '[highest_score]' xysize cell_size xalign 0.5
                     text '[highest_percent]%' xysize cell_size xalign 0.5
 
-            textbutton _("{icon=icon-x-circle} Exit"):
+            textbutton _("Exit"):
                 xalign 0.5
                 action Return(None)
 
@@ -83,7 +83,7 @@ screen rhythm_game(rhythm_game_displayable):
         ypos 50
         spacing 20
 
-        textbutton _('{icon=icon-x-circle} Quit') action [
+        textbutton _('Quit') action [
         Confirm(_('Would you like to quit the rhythm game?'),
             yes=[
             Stop(CHANNEL_RHYTHM_GAME), # stop the music on this channel

@@ -309,7 +309,7 @@ init -202 python:
         put icons as renpy text_tag
 
         ``` python
-        e " {icon=icon-book} Book "
+        e " Book "
         ```
         """
         return [(renpy.TEXT_TAG, "font=" + font_ui_ico),

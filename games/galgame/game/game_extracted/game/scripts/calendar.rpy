@@ -54,7 +54,7 @@ screen calendar_screen():
 
             hbox:
                 spacing 15
-                text '{icon=icon-calendar}'
+                text ''
                 text calendar.date.isoformat():
                     color gui.accent_color
                     font gui.interface_text_font

@@ -15,10 +15,10 @@ label ending_barista:
     player relieved "（冷静……不会有坏事发生。）"
     player smile "Sure. Anything I can help with?"
     cafe_manager "What would you say to a promotion?"
-    player surprised "A promotion?"
-    cafe_manager "Yes. You've been working hard and performing really well."
-    cafe_manager "Our customers love you and we would love to have a full-time barista like you."
-    cafe_manager "Your new hourly rate will be twice what you have now. What do you say?"
+    player surprised "升职？"
+    cafe_manager "是的。你一直工作很努力，表现非常出色。"
+    cafe_manager "我们的顾客很喜欢你，我们很乐意有一个像你这样的全职咖啡师。"
+    cafe_manager "你的新时薪将是现在的两倍。你觉得怎么样？"
     player neutral "（听起来不错但全职意味着学编程时间变少。）"
     player "（如果工作太忙可能得完全放弃编程。）"
     player "（这是很重要决定需要好好考虑。）"
@@ -120,10 +120,10 @@ label ending_cat:
     menu:
         player "要看看怎么回事吗？"
 
-        "Check under the bed.":
+        "看看床底下。":
             pass # continue with the plot
 
-        "Just go back to sleep.":
+        "继续睡觉吧。":
             player "算了Mint是好猫不会搞破坏。"
             player relieved "多睡会明天精力充沛。"
             return # return control to the script that called this label
@@ -150,13 +150,13 @@ label ending_cat:
     menu:
         player "也许这全是梦？"
 
-        "I must be dreaming. Let's go back to sleep.":
+        "我一定是在做梦。回去睡觉吧。":
             player worry "I must be so exhausted and anxious about the coding stuff that I'm hallucinating about Mint writing code."
             player relieved "在{b}精力{/b}耗尽前再睡会吧。"
             hide mint_with_pixel_sunglasses
             return # return control to the script that called this label
 
-        "This can't be a dream. I need to figure out what's going on.":
+        "这不可能是梦。我得弄清楚发生了什么。":
             pass
 
     player neutral "不这不是梦得搞清楚。"
@@ -176,7 +176,7 @@ label ending_cat:
         "Let's keep this a secret and say goodnight to Mint.":
             player "好Mint你很棒继续做你的事。"
             player "有一天我会赶上你。"
-            player laugh "Good night!"
+            player laugh "晚安！"
             hide mint_with_pixel_sunglasses
             return
     
@@ -196,7 +196,7 @@ label ending_cat:
     player "你让我现在开始工作？好我尽力！"
     $ calendar_enabled = False
 
-    call screen text_over_black_bg_screen("A month later...")
+    call screen text_over_black_bg_screen("一个月后……")
     scene bg hall with fade
     host "And now let's give a round of applause to the winning team: {b}The Code-y Cats{/b}!"
     play sound 'audio/sfx/applause.ogg'
@@ -212,7 +212,7 @@ label ending_cat:
     show girl flipped red at left with moveinleft
     college_girl "这就是在各种黑客马拉松拿奖的团队？"
     show boy red at right with moveinright
-    boy "That's impressive!"
+    boy "太厉害了！"
     journalist "Rumor even has it that the cat is a coding whiz."
     college_girl "真神秘……"
 
@@ -247,7 +247,7 @@ label ending_tutor:
     mom "有兴趣教孩子编程吗？"
     mom "A high school affiliated with the one where I'm teaching is looking to expand their CS curriculum."
     mom "在找辅导老师。 It's a temporary position for now, but may eventually turn into a full-time teaching contract."
-    player surprised "That sounds cool..."
+    player surprised "听起来很酷……"
     mom "我知道你在自学编程可能占用时间。"
     mom "由你决定不给你压力。"
     player smile "(Mom's as considerate and resourceful as always.)"
@@ -255,10 +255,10 @@ label ending_tutor:
     menu:
         player "(Should I take up the CS tutor gig?)"
     
-        "Why not? Teaching is the best way to learn!":    
+        "为什么不呢？教是学的最好方式！":    
             pass
     
-        "Nah. I'm too busy teaching myself already.":
+        "不。我已经忙着自学了。":
             player neutral "谢谢妈妈我自学太忙了这次算了。"
             mom "别担心亲爱的需要什么告诉我。"
             return
@@ -273,11 +273,11 @@ label ending_tutor:
     boy "大家安静回座位！"
     boy "听说要来新辅导老师教编程。"
     hide boy with moveoutright
-    player happy "Hi everyone. I'm [player_name]. I'm your CS tutor for the day."
+    player happy "大家好。我是[player_name]。我是今天的计算机科学导师。"
     player smile "直接开始！谁能告诉我什么是计算机程序？"
     girl "我知道！像手机上的应用！"
     boy "还有电子游戏！"
-    girl "Eh. The video game talk again. Can you talk for one second about something else?"
+    girl "呃。又是电子游戏的话题。你能说点别的吗？"
     player surprised "(Wow. The kids sure are energetic. And smart, too!)"
     player "好都是好答案现在让我给出定义……"
 
@@ -312,7 +312,7 @@ label ending_tutor:
             pass
 
     $ calendar_enabled = False
-    call screen text_over_black_bg_screen("A month later...")
+    call screen text_over_black_bg_screen("一个月后……")
     scene bg classroom with fade
     player happy "这就是for循环的原理都清楚了吗？"
     boy "This for loop thing is amazing! {b}For{/b} each enemy in the game, I'm gonna beat 'em up!"
@@ -412,7 +412,7 @@ label ending_office:
             return
 
     $ calendar_enabled = False
-    call screen text_over_black_bg_screen("A week later...")
+    call screen text_over_black_bg_screen("一周后……")
     scene bg cubicle with fade
     player neutral "（好在新办公室工作。）"
     office_worker "Hey you there. Come with me to fix the fax machine now."
@@ -468,10 +468,10 @@ label ending_farmer:
     menu:
         player "真要放弃学编程拥抱大自然吗？"
     
-        "Sounds like a plan!":
+        "听起来是个好计划！":
             pass
     
-        "Just kidding!":
+        "开玩笑的！":
             player relieved "呃……希望我是在开玩笑。"
             show mint
             mint "喵！"
@@ -572,7 +572,7 @@ label second_chance:
             "佛祖说过'没有通往幸福的路，幸福本身就是路。'"
             "很高兴你对自己的现状满意。"
             "I hope this has been a pleasant ride for you, brave traveler."
-            "Until next time!"
+            "下次见！"
             stop music
             jump ending_splash
 
@@ -626,7 +626,7 @@ label ending_splash: # alternative endings also jump to here
         set post_game_choices
         "以下是一些完成游戏后可以做的有趣事情，选择一项了解更多。"
 
-        "Check out your achievements and tweet {icon=icon-twitter}":
+        "Check out your achievements and tweet ":
             "社交起来！你在游戏中取得了很大进展是时候传播出去了。"
             "You can view your achievements on the {b}Bonus > Achievements{/b} screen. Click on the {b}Tweet{/b} button next to the achievement to tweet it."
             "If you see a lock next to the achievement, backtrack to some point in the game, try different choices, and see if you can unlock it."
@@ -634,7 +634,7 @@ label ending_splash: # alternative endings also jump to here
             "能解锁所有成就吗？这是个挑战。"
             jump post_game_choice
 
-        "Rate and review this game on itch.io {icon=icon-thumbs-up}":
+        "Rate and review this game on itch.io ":
             "Help us improve the game by rating and reviewing [learn_to_code_rpg_on_itch]."
             show itch_rate at truecenter with zoomin
             "You can find the {b}Rate Game{/b} button in the top right corner of the itch.io game page."
@@ -642,16 +642,16 @@ label ending_splash: # alternative endings also jump to here
             hide itch_rate
             menu:
                 "Would you mind taking a minute to rate and review us?"
-                "Sure thing! Take me to the page.":
+                "当然！带我去那个页面。":
                     "谢谢！这是链接。"
                 "已经做过了！" if not persistent.has_rated_and_reviewed_on_itch:
                     "Awesome. Thank you for your input!"
                     $ persistent.has_rated_and_reviewed_on_itch = True
-                "Maybe next time :)":
+                "下次吧 :)":
                     "Of course! Take your time to explore and enjoy the game. You can visit this link anytime from the {b}Bonus{/b} screen."
             jump post_game_choice
 
-        "在GitHub给游戏源代码加星{icon=icon-star}":
+        "Star the game's source code on GitHub ":
             "Interested in learning about how this game is built? Take a peek into our source code by visiting [learn_to_code_rpg_on_github]."
             show github_star at truecenter with zoomin
             "Better yet, {b}Star{/b} our repository for your reference and {b}Watch{/b} for updates!"
@@ -659,22 +659,22 @@ label ending_splash: # alternative endings also jump to here
             hide github_star
             menu:
                 "Would you like to check out our GitHub repository?"
-                "Sure thing! Take me to the page.":
+                "当然！带我去那个页面。":
                     "谢谢！这是链接。"
                 "已经做过了！" if not persistent.has_visited_github:
                     "Awesome. Enjoy digging through the source code!"
                     $ persistent.has_visited_github = True
-                "Maybe next time :)":
+                "下次吧 :)":
                     "Of course! Take your time to explore and enjoy the game. You can visit this link anytime from the {b}Bonus{/b} screen."
             jump post_game_choice
 
-        # "Support this game and other freeCodeCamp.org projects by donating {icon=icon-heart}":
+        # "Support this game and other freeCodeCamp.org projects by donating ":
         #     "This game was made possible by all the kind people who donate to support [freeCodeCamp]."
         #     "You can help support our nonprofit's mission {a=https://www.freecodecamp.org/news/how-to-donate-to-free-code-camp/}by donating to us here{/a}."
         #     "Remember you can visit link anytime from the {b}Bonus{/b} screen."
         #     jump post_game_choice
         
-        # "Check out the bonus screen for minigames, resources, and more {icon=icon-award}":
+        # "Check out the bonus screen for minigames, resources, and more ":
         #     "Did you have the chance to enjoy the rhythm minigame while you were busy learning to code, visiting the Hacker Space, and serving coffee?"
         #     "Are you interested in checking out the actual [freeCodeCamp] curriculum and teach yourself to code in real life?"
         #     "你运气好，{b}奖励{/b}屏幕有你需要的所有东西。"
@@ -683,7 +683,7 @@ label ending_splash: # alternative endings also jump to here
         #     "一定会好好利用奖励内容的！"
         #     jump post_game_choice
 
-        "Discover alternative endings {icon=icon-map}":
+        "Discover alternative endings ":
             "Which ending took you here, if I may ask?"
             "你如愿成为开发者了吗？还是做了其他工作？"
             "Perhaps you discovered that Mint, your adorable home cat, is better at coding than you?"

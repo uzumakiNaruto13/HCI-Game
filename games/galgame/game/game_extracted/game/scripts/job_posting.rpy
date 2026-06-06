@@ -80,8 +80,8 @@ screen job_posting_screen(company_name, skill_names, easter_egg_skill=None):
             hbox:
                 spacing 100
                 xalign .5
-                textbutton _("{icon=icon-minus-circle} Pass") action Return(False) # boolean return indicating whether the player decides to apply
-                textbutton _("{icon=icon-send} Apply") action Return(True)
+                textbutton _("Pass") action Return(False) # boolean return indicating whether the player decides to apply
+                textbutton _("申请") action Return(True)
 
 # see confirm_and_share.rpy
 screen company_email_screen(company_name, message, ok_text):

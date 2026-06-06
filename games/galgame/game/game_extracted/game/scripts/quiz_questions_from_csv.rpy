@@ -196,7 +196,7 @@ init python:
     QuizQuestion(
     question=_("How do you add content after an element?"),
     true=_("::after"),
-    false=[_("::after-content"), _("::add"), _("::before")],
+    false=[_("::after-content"), _("新增"), _("::before")],
     explanation=_("You can use the ::after selector to add content after an element"),
     learn_more_url="https://www.freecodecamp.org/news/10-css-tricks-for-your-next-coding-project/",
     difficulty=1,
@@ -276,7 +276,7 @@ init python:
     QuizQuestion(
     question=_("How can you abbreviate the following Hex code? #FF0000"),
     true=_("#F00"),
-    false=[_("#0F0"), _("#00F"), _("#0FF0")],
+    false=[_("#0F0"), _("#00F"), _("# 0FF0")],
     explanation=_("To abbreviate a Hex code in CSS, include one digit of each pair of digits in the code. "),
     learn_more_url="https://www.freecodecamp.org/news/how-hex-code-colors-work-how-to-choose-colors-without-a-color-picker/",
     difficulty=1,
@@ -844,7 +844,7 @@ init python:
     QuizQuestion(
     question=_("What CSS selector is used to set the style of visited links?"),
     true=_("a:visited"),
-    false=[_("a:hover"), _("a:active"), _("a:link")],
+    false=[_("a:hover"), _("a:active"), _("鏈結")],
     explanation=_("With a:visited you can set the style of visited links."),
     learn_more_url="https://www.freecodecamp.org/news/how-to-style-links-in-css/",
     difficulty=2,
@@ -852,7 +852,7 @@ init python:
     QuizQuestion(
     question=_("What CSS selector is used to set the style of links when the user moves the mouse over them?"),
     true=_("a:hover"),
-    false=[_("a:visited"), _("a:active"), _("a:link")],
+    false=[_("a:visited"), _("a:active"), _("鏈結")],
     explanation=_("With a:hover you can set the style of links when the user mouses over them."),
     learn_more_url="https://www.freecodecamp.org/news/how-to-style-links-in-css/",
     difficulty=2,
@@ -860,7 +860,7 @@ init python:
     QuizQuestion(
     question=_("What CSS selector is used to set the style of links for the moment they are clicked?"),
     true=_("a:active"),
-    false=[_("a:hover"), _("a:visited"), _("a:link")],
+    false=[_("a:hover"), _("a:visited"), _("鏈結")],
     explanation=_("With a:active you can set the style of links for the moment they are clicked."),
     learn_more_url="https://www.freecodecamp.org/news/how-to-style-links-in-css/",
     difficulty=2,
@@ -912,7 +912,7 @@ init python:
     QuizQuestion(
     question=_("What HTML tag is used to make text bold?"),
     true=_("<b>"),
-    false=[_("<br>"), _("<bold>"), _("<p>")],
+    false=[_("<br>品牌"), _("<bold>"), _("<p>")],
     explanation=_("The <b> tag is used to make a portion of the text bold without carrying any special importance."),
     learn_more_url="https://www.freecodecamp.org/news/html-bold-text-tutorial-how-to-use-the-b-tag/",
     difficulty=1,
@@ -920,7 +920,7 @@ init python:
     QuizQuestion(
     question=_("What HTML tag is used to create an unordered (bulleted) list?"),
     true=_("<ul>"),
-    false=[_("<ol>"), _("<li>"), _("<a>")],
+    false=[_("<ol>"), _("<li>1/ 粘贴许可证密钥</li><li>2/ 保存更改</li><li>3/ 激活许可证。</li><li>就是这样！之后不要保存更改！</li>"), _("<a>")],
     explanation=_(" The <ul> tag is used to create an unordered list. Within the <ul> and </ul> tags, you use the <li> and </li> tags, to create individual list items."),
     learn_more_url="https://www.freecodecamp.org/news/html-list-how-to-use-bullet-points-ordered-and-unordered-lists/",
     difficulty=1,
@@ -944,7 +944,7 @@ init python:
     QuizQuestion(
     question=_("What HTML tag is used to italicize text?"),
     true=_("<i>"),
-    false=[_("<b>"), _("<span>"), _("<li>")],
+    false=[_("<b>"), _("<span>"), _("<li>1/ 粘贴许可证密钥</li><li>2/ 保存更改</li><li>3/ 激活许可证。</li><li>就是这样！之后不要保存更改！</li>")],
     explanation=_("The <i> tag displays text in italic."),
     learn_more_url="https://www.freecodecamp.org/news/html-italics-tutorial-how-to-make-text-italic-with-the-i-tag/",
     difficulty=1,
@@ -1192,7 +1192,7 @@ init python:
     QuizQuestion(
     question=_("What is the name of the tag nested inside the select tag?"),
     true=_("option tag"),
-    false=[_("h1 tag"), _("code tag"), _("aside tag")],
+    false=[_("H1 标签"), _("code tag"), _("aside tag")],
     explanation=_("The option tag is nested inside the select tag and it serves to provide options for the dropdown menu."),
     learn_more_url="https://www.freecodecamp.org/news/html-select-tag-how-to-make-a-dropdown-menu-or-combo-list/",
     difficulty=1,
@@ -1344,7 +1344,7 @@ init python:
     QuizQuestion(
     question=_("What is the character entity of the less than symbol in HTML?"),
     true=_("&lt;"),
-    false=[_("&lessthan;"), _("&less;"), _("&lthan;")],
+    false=[_("&lessthan;"), _("簡約"), _("&lthan;")],
     explanation=_("You can use the &lt; to display a less than symbol in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/html-space-how-to-add-a-non-breaking-space-with-the-nbsp-character-entity/",
     difficulty=1,
@@ -1367,7 +1367,7 @@ init python:
     ),
     QuizQuestion(
     question=_("How do you add two non-breaking spaces in HTML?"),
-    true=_("&ensp;"),
+    true=_("eNSP"),
     false=[_("&twospaces;"), _("&e-n-s-p;"), _("&enspaces;")],
     explanation=_("You can use the &ensp; entity to display two non-breaking spaces in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/html-space-how-to-add-a-non-breaking-space-with-the-nbsp-character-entity/",
@@ -1375,7 +1375,7 @@ init python:
     ),
     QuizQuestion(
     question=_("How do you add four non-breaking spaces in HTML?"),
-    true=_("&emsp;"),
+    true=_("&emsp;停止"),
     false=[_("&fourspaces;"), _("&e-m-s-p;"), _("&emspaces;")],
     explanation=_("You can use the &emsp; entity to display four non-breaking spaces in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/html-space-how-to-add-a-non-breaking-space-with-the-nbsp-character-entity/",
@@ -1504,15 +1504,15 @@ init python:
     QuizQuestion(
     question=_("What is the HTML character entity for the ampersand sign?"),
     true=_("&amp;"),
-    false=[_("&amper;"), _("&and;"), _("&ampsand;")],
+    false=[_("&amper;"), _("和"), _("&ampsand;")],
     explanation=_("The &amp; character entity is used to display the ampersand sign in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/ascii-table-hex-to-ascii-value-character-code-chart-2/",
     difficulty=1,
     ),
     QuizQuestion(
     question=_("What is the HTML character entity for the Euro sign?"),
-    true=_("&euro;"),
-    false=[_("&esign;"), _("&eurosign;"), _("&eu;")],
+    true=_("欧元"),
+    false=[_("&esign;"), _("&eurosign;"), _("EU")],
     explanation=_("The &euro; character entity is used to display the Euro sign in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/ascii-table-hex-to-ascii-value-character-code-chart-2/",
     difficulty=1,
@@ -1567,8 +1567,8 @@ init python:
     ),
     QuizQuestion(
     question=_("What is the HTML character entity for the degree symbol?"),
-    true=_("&deg;"),
-    false=[_("&degree;"), _("&d;"), _("&dg;")],
+    true=_("繁荣"),
+    false=[_("&degree;"), _("&d;"), _("dg")],
     explanation=_("The &deg; character entity is used to display the degree symbol in HTML."),
     learn_more_url="https://www.freecodecamp.org/news/ascii-table-hex-to-ascii-value-character-code-chart-2/",
     difficulty=1,
@@ -1751,7 +1751,7 @@ init python:
     ),
     QuizQuestion(
     question=_("Which HTML tag represents a line break element?"),
-    true=_("<br>"),
+    true=_("<br>品牌"),
     false=[_("<hr>"), _("<break>"), _("<line>")],
     explanation=_("The <br> tag is used to represent a line break element."),
     learn_more_url="https://www.freecodecamp.org/news/html-line-break-how-to-break-a-line-with-the-html-br-tag/",
@@ -1760,7 +1760,7 @@ init python:
     QuizQuestion(
     question=_("Which HTML tag represents a thematic break (horizontal line) element?"),
     true=_("<hr>"),
-    false=[_("<br>"), _("<line>"), _("<hor>")],
+    false=[_("<br>品牌"), _("<line>"), _("<hor>")],
     explanation=_("The <hr> tag is used to represent a thematic break (horizontal rule) element."),
     learn_more_url="https://devdocs.io/html/element/hr",
     difficulty=1,
@@ -2640,14 +2640,14 @@ init python:
     QuizQuestion(
     question=_("How many bytes make up a Kilobyte?"),
     true=_("1,000 bytes"),
-    false=[_("100 bytes"), _("10 bytes"), _("1 byte")],
+    false=[_("100 bytes"), _("10 bytes"), _("单字节")],
     explanation=_("A Kilobyte is composed of 1,000 bytes"),
     learn_more_url="https://www.freecodecamp.org/news/kilobyte-definition/",
     difficulty=1,
     ),
     QuizQuestion(
     question=_("How many bits make up a byte?"),
-    true=_("8 bits"),
+    true=_("8位"),
     false=[_("16 bits"), _("32 bits"), _("12 bits")],
     explanation=_("There are 8 bits in a byte"),
     learn_more_url="https://www.freecodecamp.org/news/byte-definition/",
@@ -2719,7 +2719,7 @@ init python:
     ),
     QuizQuestion(
     question=_("Which protocol secures communication between computer networks?"),
-    true=_("HTTPS "),
+    true=_("HTTPS"),
     false=[_("HTTP"), _("FTP"), _("SMTP")],
     explanation=_("HTTPS is a more secure and confidential version of HTTP. It's the safest way to transfer data between a browser and a server."),
     learn_more_url="https://www.freecodecamp.org/news/what-is-https-http-vs-https-meaning-and-how-it-works/",
@@ -2744,7 +2744,7 @@ init python:
     QuizQuestion(
     question=_("Which of the following is an example of volatile memory?"),
     true=_("RAM (Random Access Memory)"),
-    false=[_("SSD (Solid State Drive)"), _("MRAM "), _("ROM")],
+    false=[_("SSD (Solid State Drive)"), _("MRAM"), _("ROM")],
     explanation=_("While RAM is very fast, it is a type of volatile memory. This means that it only stores information while the computer is on. Unlike an HDD or SSD, once you shut down your computer, everything stored in RAM is lost."),
     learn_more_url="https://www.freecodecamp.org/news/ram-definition/",
     difficulty=2,
@@ -2964,7 +2964,7 @@ init python:
     QuizQuestion(
     question=_("How can you get the length of a string in JavaScript?"),
     true=_(".length"),
-    false=[_("len()"), _("length()"), _(".size()")],
+    false=[_("LEG"), _("length()"), _(".size()")],
     explanation=_("Strings have a .length property that contains their length (number of characters)."),
     learn_more_url="https://devdocs.io/javascript/global_objects/string/length",
     difficulty=1,
@@ -2972,14 +2972,14 @@ init python:
     QuizQuestion(
     question=_("What JavaScript method adds an element to the end of an array?"),
     true=_(".push()"),
-    false=[_(".pop()"), _(".shift()"), _(".unshift()")],
+    false=[_("人口"), _(".shift()"), _(".unshift()")],
     explanation=_("The .push() method adds an element to the end of the array."),
     learn_more_url="https://www.freecodecamp.org/news/the-javascript-array-handbook/",
     difficulty=1,
     ),
     QuizQuestion(
     question=_("What JavaScript method removes the last element of an array and returns it?"),
-    true=_(".pop()"),
+    true=_("人口"),
     false=[_(".push()"), _(".shift()"), _(".unshift()")],
     explanation=_("The .pop() method removes the last element of an array and returns it."),
     learn_more_url="https://www.freecodecamp.org/news/the-javascript-array-handbook/",
@@ -2988,7 +2988,7 @@ init python:
     QuizQuestion(
     question=_("What JavaScript method removes the first element of an array and returns it?"),
     true=_(".shift()"),
-    false=[_(".push()"), _(".pop()"), _(".unshift()")],
+    false=[_(".push()"), _("人口"), _(".unshift()")],
     explanation=_("The .shift() method removes the first element of an array and returns it. "),
     learn_more_url="https://www.freecodecamp.org/news/the-javascript-array-handbook/",
     difficulty=1,
@@ -2996,7 +2996,7 @@ init python:
     QuizQuestion(
     question=_("What JavaScript method adds an element to the beginning of an array?"),
     true=_(".unshift()"),
-    false=[_(".push()"), _(".pop()"), _(".shift()")],
+    false=[_(".push()"), _("人口"), _(".shift()")],
     explanation=_("The .unshift() method adds the element passed as an argument to the beginning of an array."),
     learn_more_url="https://www.freecodecamp.org/news/the-javascript-array-handbook/",
     difficulty=1,
@@ -3220,7 +3220,7 @@ init python:
     QuizQuestion(
     question=_("What is the name of the method that extracts a portion of an array and returns a new array?"),
     true=_(".slice()"),
-    false=[_(".splice()"), _(".pop()"), _(".sort()")],
+    false=[_(".splice()"), _("人口"), _(".sort()")],
     explanation=_("The .slice() method extracts a portion of an array and returns a new array."),
     learn_more_url="https://www.freecodecamp.org/news/javascript-array-slice-vs-splice-whats-the-difference/",
     difficulty=1,
@@ -3299,8 +3299,8 @@ init python:
     ),
     QuizQuestion(
     question=_("Are semicolons strictly required in JavaScript?"),
-    true=_("No"),
-    false=[_("Yes")],
+    true=_("否"),
+    false=[_("是")],
     explanation=_("JavaScript does not require strict use of semicolons because it inserts them where they are needed through a process called Automatic Semicolon Insertion."),
     learn_more_url="https://www.freecodecamp.org/news/lets-talk-about-semicolons-in-javascript-f1fe08ab4e53/#:~:text=This%20is%20all%20possible%20because%20JavaScript%20does%20not%20strictly%20require%20semicolons.&text=It's%20important%20to%20know%20the,not%20behave%20like%20you%20expect.",
     difficulty=1,
@@ -3528,7 +3528,7 @@ init python:
     QuizQuestion(
     question=_("Which Linux command is used to count JUST the words in a file?"),
     true=_("wc -w"),
-    false=[_("wc -l"), _("wc -c"), _("wc  -5")],
+    false=[_("wc -l"), _("wc -c"), _("wc -5")],
     explanation=_("To count just the words inside a file you use the wc command with the -w option."),
     learn_more_url="https://www.freecodecamp.org/news/the-linux-commands-handbook/#the-linux-wc-command",
     difficulty=2,
@@ -3687,8 +3687,8 @@ init python:
     ),
     QuizQuestion(
     question=_("Which keyboard shortcut will stop running the Linux ping command?"),
-    true=_("Ctrl-C"),
-    false=[_("command-D"), _("ctrl-D"), _("exit")],
+    true=_("Ctrl+C"),
+    false=[_("command-D"), _("Ctrl+D"), _("exit")],
     explanation=_("The ping command, keeps sending multiple requests every second, by default. It will keep running until you stop it with Ctrl-C."),
     learn_more_url="https://www.freecodecamp.org/news/the-linux-commands-handbook/",
     difficulty=2,
@@ -3907,8 +3907,8 @@ init python:
     ),
     QuizQuestion(
     question=_("What function can you use to transform a number represented as a string into an integer in Python?"),
-    true=_("int()"),
-    false=[_("float()"), _("complex()"), _("bin()")],
+    true=_("int"),
+    false=[_("float()"), _("complex()"), _("箱子")],
     explanation=_("The int() function takes a string as an argument and returns an integer."),
     learn_more_url="https://www.freecodecamp.org/news/how-to-convert-strings-into-integers-in-python/",
     difficulty=1,
@@ -3987,8 +3987,8 @@ init python:
     ),
     QuizQuestion(
     question=_("What is the result of this Python code: “Hi” * 2?"),
-    true=_("“HiHi”"),
-    false=[_("“Hihi”"), _("“HiHiHiHi”"), _("A SyntaxError")],
+    true=_("「HiHi」"),
+    false=[_("「Hihi」"), _("“HiHiHiHi”"), _("A SyntaxError")],
     explanation=_("The * operator in Python can be used to repeat a string a given number of times. In this case, the string “Hi” is repeated two times. "),
     learn_more_url="https://www.freecodecamp.org/news/python-code-examples-sample-script-coding-tutorial-for-beginners/#-python-operators",
     difficulty=1,
@@ -4027,8 +4027,8 @@ init python:
     ),
     QuizQuestion(
     question=_("What built-in Python function returns the length of a sequence?"),
-    true=_("len()"),
-    false=[_("length()"), _("size()"), _("s()")],
+    true=_("LEG"),
+    false=[_("length()"), _("尺寸"), _("s()")],
     explanation=_("The len() function returns the length (number of items) of an object."),
     learn_more_url="https://docs.python.org/3/library/functions.html#len",
     difficulty=1,
@@ -4076,7 +4076,7 @@ init python:
     QuizQuestion(
     question=_("Which built-in Python function is used for taking user input in Python?"),
     true=_("input()"),
-    false=[_("in()"), _("user()"), _("receive()")],
+    false=[_("："), _("user()"), _("receive()")],
     explanation=_("The input() function is used to take user input in Python."),
     learn_more_url="https://www.freecodecamp.org/news/the-ultimate-guide-to-python-from-beginner-to-intermediate-to-pro/",
     difficulty=1,
@@ -4124,15 +4124,15 @@ init python:
     QuizQuestion(
     question=_("How can you create an empty list in Python?"),
     true=_("[[]"),
-    false=[_("dict()"), _("??"), _("(())")],
+    false=[_("*字典"), _("??"), _("(())")],
     explanation=_("You can create an empty list with [[] or with list() in Python."),
     learn_more_url="https://www.freecodecamp.org/news/python-empty-list-tutorial-how-to-create-an-empty-list-in-python/",
     difficulty=1,
     ),
     QuizQuestion(
     question=_("How can you create an empty set in Python?"),
-    true=_("set()"),
-    false=[_("{{}"), _("dict()"), _("()")],
+    true=_("套"),
+    false=[_("{{}"), _("*字典"), _("()")],
     explanation=_("You must call the set() function to create an empty set in Python."),
     learn_more_url="https://www.freecodecamp.org/news/python-sets-detailed-visual-introduction/",
     difficulty=1,
@@ -4267,7 +4267,7 @@ init python:
     ),
     QuizQuestion(
     question=_("What method is used to remove a key-value pair from a dictionary in Python and return its value?"),
-    true=_(".pop()"),
+    true=_("人口"),
     false=[_(".push()"), _(".append()"), _(".insert()")],
     explanation=_("The .pop() method is used to remove a key-value pair from the dictionary and return the value."),
     learn_more_url="https://www.freecodecamp.org/news/python-dictionaries-detailed-visual-introduction/",
@@ -4283,7 +4283,7 @@ init python:
     ),
     QuizQuestion(
     question=_("What built-in Python function allows you to iterate over multiple iterables in parallel by returning a tuple with an item from each one?"),
-    true=_("zip()"),
+    true=_("邮编"),
     false=[_("iterate()"), _("print()"), _("range()")],
     explanation=_("The zip() function allows you to iterate over multiple iterables in parallel by returning a tuple with an item from each one."),
     learn_more_url="https://www.freecodecamp.org/news/the-zip-function-in-python-explained-with-examples/",
@@ -4291,16 +4291,16 @@ init python:
     ),
     QuizQuestion(
     question=_("What built-in Python function returns the smallest item in an iterable or the smallest of two or more arguments?"),
-    true=_("min()"),
-    false=[_("max()"), _("minimum()"), _("smallest)")],
+    true=_("min"),
+    false=[_("最高"), _("minimum()"), _("smallest)")],
     explanation=_("The min() function returns the smallest item in an iterable or the smallest of two or more arguments."),
     learn_more_url="https://www.freecodecamp.org/news/python-function-guide-with-examples/",
     difficulty=1,
     ),
     QuizQuestion(
     question=_("What built-in Python function returns the largest item in an iterable or the largest of two or more arguments?"),
-    true=_("max()"),
-    false=[_("min()"), _("maximum()"), _("largest()")],
+    true=_("最高"),
+    false=[_("min"), _("maximum()"), _("largest()")],
     explanation=_("The max() function returns the largest item in an iterable or the largest of two or more arguments."),
     learn_more_url="https://www.freecodecamp.org/news/python-function-guide-with-examples/",
     difficulty=1,
@@ -4308,7 +4308,7 @@ init python:
     QuizQuestion(
     question=_("What built-in Python function returns a new sorted list from the items in an iterable?"),
     true=_("sorted()"),
-    false=[_("sorting()"), _("print()"), _("copy()")],
+    false=[_("sorting()"), _("print()"), _("复制 ")],
     explanation=_("The sorted() function returns a new sorted list from the items in an iterable. "),
     learn_more_url="https://www.freecodecamp.org/news/python-sort-list-how-to-order-by-descending-or-ascending/",
     difficulty=1,
@@ -4355,24 +4355,24 @@ init python:
     ),
     QuizQuestion(
     question=_("What Python function returns True if all the elements of an iterable evaluate to True?"),
-    true=_("all()"),
-    false=[_("any()"), _("none()"), _("zero()")],
+    true=_("所有"),
+    false=[_("任意"), _("无"), _("0")],
     explanation=_("The all() function returns True if all the elements of the iterable passed as an argument evaluate to True. Else, it returns False."),
     learn_more_url="https://www.freecodecamp.org/news/python-any-and-all-functions-explained-with-examples/",
     difficulty=2,
     ),
     QuizQuestion(
     question=_("What Python function returns True if any element of the iterable evaluates to True?"),
-    true=_("any()"),
-    false=[_("all()"), _("none()"), _("one()")],
+    true=_("任意"),
+    false=[_("所有"), _("无"), _("一")],
     explanation=_("The any() function returns True if any element of the iterable passed as an argument evaluates to True. Else, it returns False."),
     learn_more_url="https://www.freecodecamp.org/news/python-any-and-all-functions-explained-with-examples/",
     difficulty=2,
     ),
     QuizQuestion(
     question=_("What Python function returns the string representing a character whose Unicode code point is the integer passed as an argument?"),
-    true=_("chr()"),
-    false=[_("ord()"), _("str()"), _("code()")],
+    true=_("CHR"),
+    false=[_("ORD"), _("Use this property if the variable is of the type IS_DOUBLE."), _("代码")],
     explanation=_("The chr() function returns the string representing a character whose Unicode code point is the integer passed as an argument."),
     learn_more_url="https://www.freecodecamp.org/news/python-function-guide-with-examples/",
     difficulty=2,
@@ -4476,7 +4476,7 @@ init python:
     QuizQuestion(
     question=_("What is the filename extension of a Python file?"),
     true=_(".py"),
-    false=[_(".js"), _(".html"), _(".p")],
+    false=[_(".js"), _("HTML"), _(".p")],
     explanation=_("Python files have a .py filename extension."),
     learn_more_url="https://en.wikipedia.org/wiki/Python_(programming_language)",
     difficulty=1,
@@ -4679,7 +4679,7 @@ init python:
     ),
     QuizQuestion(
     question=_("What aggregate function in SQL allows you to calculate the average of a numeric column from the set of rows returned by a query?"),
-    true=_("AVG()"),
+    true=_("平均值"),
     false=[_("COUNT()"), _("MINIMUM()"), _("AVERAGE()")],
     explanation=_("The AVG() function is used to calculate the average of a column from the set of rows returned by a query."),
     learn_more_url="https://www.freecodecamp.org/news/basic-sql-commands/",
@@ -4688,7 +4688,7 @@ init python:
     QuizQuestion(
     question=_("What aggregate function in SQL allows you to count the number of rows and return that count as a column in the result set?"),
     true=_("COUNT()"),
-    false=[_("AVG()"), _("MINIMUM()"), _("AVERAGE()")],
+    false=[_("平均值"), _("MINIMUM()"), _("AVERAGE()")],
     explanation=_("The COUNT() function is used to count the number of rows and return that count as a column in the result set"),
     learn_more_url="https://www.freecodecamp.org/news/basic-sql-commands/",
     difficulty=2,
@@ -4909,7 +4909,7 @@ init python:
 
     devops_questions = [
     QuizQuestion(
-    question="What is DevOps?",
+    question="什么是DevOps？",
     true="a combination of software development and IT operations with the goal of shortening the systems development life cycle ",
     false=["a popular JavaScript library", "a popular SQL database", "a popular Python library"],
     explanation="DevOps combines software development and IT operations with the goal of shortening the systems development life cycle and providing continuous delivery of software. ",

@@ -15,7 +15,7 @@ screen save_reminder_screen(message, yes_action, no_action):
             yalign .5
             spacing 45
 
-            label _("Would you like to get future reminders to save your progress?"):
+            label _("你想在以后收到保存进度的提醒吗？"):
                 style "confirm_prompt"
                 xalign 0.5
 
@@ -39,8 +39,8 @@ screen save_reminder_screen(message, yes_action, no_action):
                 xalign 0.5
                 spacing 150
 
-                textbutton _("Yes") action yes_action
-                textbutton _("No") action no_action
+                textbutton _("是") action yes_action
+                textbutton _("否") action no_action
 
     ## Right-click and escape answer "no".
     key "game_menu" action no_action

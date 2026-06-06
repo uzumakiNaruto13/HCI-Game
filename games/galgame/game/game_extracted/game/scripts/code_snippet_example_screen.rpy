@@ -68,7 +68,7 @@ python early:
         the examples dictionary.
         """
 
-        fn = fn.replace("game/", "")
+        fn = fn.replace("游戏", "")
 
         with renpy.notl_file(fn) as f:
             data = f.read()
@@ -475,8 +475,8 @@ init python:
 
         def __call__(self):
             import pygame.scrap
-            pygame.scrap.put(pygame.SCRAP_TEXT, self.s.encode("utf-8"))
-            renpy.notify(_("Copied the example to the clipboard."))
+            pygame.scrap.put(pygame.SCRAP_TEXT, self.s.encode("utf- 8"))
+            renpy.notify(_("已复制示例到剪贴板。"))
 
     example_transition = dissolve
 
@@ -526,7 +526,7 @@ screen example(blocks, small=False, bottom=False, showtrans=False):
 
         frame:
             style "empty"
-            background "#fffc"
+            background "# fffc"
             foreground Solid("#aaac", xsize=1, xpos=178)
 
             xfill True
@@ -594,7 +594,7 @@ init python hide:
 
         for l in f:
 
-            l = l.decode("utf-8")
+            l = l.decode("utf- 8")
             l = l.rstrip()
 
             m = re.match("\s*#begin (\w+)", l)

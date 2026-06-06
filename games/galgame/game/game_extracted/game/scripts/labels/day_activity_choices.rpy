@@ -447,7 +447,7 @@ label v2_activity_hacker_space:
 label v2_vending_machine:
     "你想去自动售货机吗？"
     menu:
-        "Yes":
+        "是":
             call screen shop_screen(vending_machine_items)
     
         "下次再说":
@@ -458,7 +458,7 @@ label v2_vending_machine:
 label v2_shop:
     "你想去购物吗？"
     menu:
-        "Yes":
+        "是":
             call screen shop_screen(home_shop_items)
     
         "下次再说":
