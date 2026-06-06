@@ -737,26 +737,7 @@ Module.preRun = Module.preRun || [ ];
     let inputAllow = null;
     let inputExclude = null;
 
-    // IME composition support for Chinese/Japanese/Korean input
-    let isComposing = false;
-
-    inputText.addEventListener("compositionstart", () => {
-        isComposing = true;
-    });
-
-    inputText.addEventListener("compositionend", (e) => {
-        isComposing = false;
-        // Trigger input event manually to apply filtering after composition ends
-        let event = new Event("input", { bubbles: true });
-        inputText.dispatchEvent(event);
-    });
-
     inputText.addEventListener("input", (e) => {
-        // During IME composition, don't filter - let the IME output complete characters
-        if (isComposing) {
-            return;
-        }
-
         let newValue = "";
 
         for (let c of inputText.value) {
