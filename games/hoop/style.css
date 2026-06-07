@@ -338,20 +338,24 @@
   animation: skill-ready-flash 0.4s ease-out;
 }
 
-/* --- 摄像头体感预览 HUD --- */
+/* --- 摄像头体感预览 HUD (全局可拖拽移动 + 四向缩放) --- */
 #cam-preview-hud {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 33%;
-  max-width: 500px;
+  width: 320px;
+  min-width: 160px;
+  min-height: 140px;
+  max-width: 800px;
+  max-height: 600px;
   background: rgba(0, 0, 15, 0.9);
   border: 3px solid #CC8800;
-  z-index: 150;
+  z-index: 9999;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
   display: flex;
   flex-direction: column;
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .cam-header {
@@ -359,22 +363,51 @@
   padding: 6px 12px;
   border-bottom: 2px solid #CC8800;
   border-radius: 5px 5px 0 0;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .cam-title {
   color: #00FF00;
-  font-size: 16px;
+  font-size: 14px;
   font-family: 'Microsoft YaHei', 'VT323', monospace;
   letter-spacing: 2px;
   animation: hoop-pulse 1.5s infinite;
 }
 
+.cam-size-hint {
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+}
+
+/* 四边缩放手柄 */
+.cam-resize-n, .cam-resize-s { position: absolute; left: 8px; right: 8px; height: 6px; z-index: 10; }
+.cam-resize-n { top: 0; cursor: n-resize; }
+.cam-resize-s { bottom: 0; cursor: s-resize; }
+.cam-resize-w, .cam-resize-e { position: absolute; top: 8px; bottom: 8px; width: 6px; z-index: 10; }
+.cam-resize-w { left: 0; cursor: w-resize; }
+.cam-resize-e { right: 0; cursor: e-resize; }
+
+/* 四角缩放手柄 */
+.cam-resize-nw, .cam-resize-ne, .cam-resize-sw, .cam-resize-se {
+  position: absolute; width: 14px; height: 14px; z-index: 11;
+}
+.cam-resize-nw { top: -2px; left: -2px; cursor: nw-resize; }
+.cam-resize-ne { top: -2px; right: -2px; cursor: ne-resize; }
+.cam-resize-sw { bottom: -2px; left: -2px; cursor: sw-resize; }
+.cam-resize-se { bottom: -2px; right: -2px; cursor: se-resize; }
+
 .cam-content {
   position: relative;
   width: 100%;
-  padding-top: 75%;
+  flex: 1;
   overflow: hidden;
   background: #050505;
+  min-height: 80px;
 }
 
 #cam-video, #cam-canvas {

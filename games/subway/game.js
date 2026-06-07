@@ -35,6 +35,7 @@ SubwaySurfGame.prototype.setup = function () {
   this.invincibleTimer = 0;
   this.hitFlash = 0;
   this._shiftHeld = false;
+  this._poseJumpLock = false;
   this.sprintCooldown = 0;
   this.freezeTimer = 0;
   this.hpMax = 7;
@@ -291,6 +292,25 @@ SubwaySurfGame.prototype.update = function () {
 
   var groundY = H / 2 + 30;
   if (this.playerY === 0 && !this.isJumping) this.playerY = groundY;
+
+  // 体感跳跃：MediaPipe 腿部检测 → 自动跳跃
+  if (!this.isJumping && !this.isSliding && window._globalPoseData) {
+    var lm = window._globalPoseData;
+    var lAnkle = lm[27], rAnkle = lm[28], lHip2 = lm[23], rHip2 = lm[24];
+    if (lAnkle && rAnkle && lHip2 && rHip2) {
+      var ankleY = (lAnkle.y + rAnkle.y) / 2;
+      var hipY2 = (lHip2.y + rHip2.y) / 2;
+      // 脚踝高于髋部 → 跳跃中
+      if (ankleY > hipY2 + 0.04 && !this._poseJumpLock) {
+        this.isJumping = true;
+        this.isSliding = false;
+        this.playerVY = -18 * this.speed;
+        this._poseJumpLock = true;
+        this.emitParticles(W / 2, this.playerY - 20, 'rgba(0,212,255,', 8);
+      }
+      if (ankleY <= hipY2 + 0.01) this._poseJumpLock = false; // 落地后解锁
+    }
+  }
 
   if (this.isJumping) {
     this.playerVY += 0.65 * this.speed;

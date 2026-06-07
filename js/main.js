@@ -159,22 +159,6 @@ function initSystem() {
       e.preventDefault();
       startGame(STATE.gameMode);
     }
-<<<<<<< HEAD
-
-    // 数字键快速切换 (1/2/3)
-    if (isLobby && e.key >= '1' && e.key <= '3') {
-      var idx = parseInt(e.key) - 1;
-      STATE.gameMode = idx;
-      updateLobbyUI(idx);
-    }
-
-    // H = 切换操作映射面板
-    if (e.key === 'h' || e.key === 'H') {
-      var guide = document.getElementById('actionGuide' + STATE.gameMode);
-      if (guide) {
-        guide.classList.toggle('hidden');
-        console.log('[快捷键] 操作映射面板:', guide.classList.contains('hidden') ? '隐藏' : '显示');
-=======
     // ESC = 暂停/继续 (暂停时显示操作面板，运行时隐藏)
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -195,7 +179,6 @@ function initSystem() {
             currentGame._animFrameId = null;
           }
         }
->>>>>>> d703222 (fix:修改了第一款游戏的体验感问题，修复了第二款游戏在抢球中卡死的问题)
       }
     }
   });
@@ -207,6 +190,136 @@ function initSystem() {
       if (c) { c.width = window.innerWidth; c.height = window.innerHeight; }
     });
   });
+
+  // === 全局摄像头面板：拖拽移动 + 四向缩放 ===
+  (function setupCamPanel() {
+    var hud = document.getElementById('cam-preview-hud');
+    var header = document.getElementById('cam-drag-handle');
+    if (!hud || !header) return;
+
+    var MIN_W = 160, MIN_H = 140, MAX_W = 800, MAX_H = 600;
+    var isDragging = false, isResizing = false;
+    var dragStartX, dragStartY, startLeft, startTop;
+    var resizeDir = '', resizeStartX, resizeStartY, startW, startH, startL, startT;
+
+    // ---- 拖拽移动 ----
+    header.addEventListener('mousedown', function (e) {
+      if (e.target.classList.contains('cam-resize-n') || e.target.classList.contains('cam-resize-s') ||
+          e.target.classList.contains('cam-resize-w') || e.target.classList.contains('cam-resize-e') ||
+          e.target.classList.contains('cam-resize-nw') || e.target.classList.contains('cam-resize-ne') ||
+          e.target.classList.contains('cam-resize-sw') || e.target.classList.contains('cam-resize-se')) return;
+      isDragging = true;
+      dragStartX = e.clientX; dragStartY = e.clientY;
+      startLeft = hud.offsetLeft; startTop = hud.offsetTop;
+      e.preventDefault();
+    });
+
+    // ---- 缩放手柄 ----
+    var resizeHandles = hud.querySelectorAll('[class^="cam-resize-"]');
+    resizeHandles.forEach(function (h) {
+      h.addEventListener('mousedown', function (e) {
+        isResizing = true;
+        resizeDir = h.className.replace('cam-resize-', '');
+        resizeStartX = e.clientX; resizeStartY = e.clientY;
+        startW = hud.offsetWidth; startH = hud.offsetHeight;
+        startL = hud.offsetLeft; startT = hud.offsetTop;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (isDragging) {
+        var newL = startLeft + (e.clientX - dragStartX);
+        var newT = startTop + (e.clientY - dragStartY);
+        newL = Math.max(0, Math.min(window.innerWidth - hud.offsetWidth, newL));
+        newT = Math.max(0, Math.min(window.innerHeight - hud.offsetHeight, newT));
+        hud.style.left = newL + 'px'; hud.style.top = newT + 'px';
+        hud.style.right = 'auto'; hud.style.bottom = 'auto';
+      }
+      if (isResizing) {
+        var dx = e.clientX - resizeStartX, dy = e.clientY - resizeStartY;
+        var newW = startW, newH = startH, newL = startL, newT = startT;
+
+        if (resizeDir.indexOf('e') !== -1) newW = Math.max(MIN_W, Math.min(MAX_W, startW + dx));
+        if (resizeDir.indexOf('w') !== -1) { newW = Math.max(MIN_W, Math.min(MAX_W, startW - dx)); newL = startL + (startW - newW); }
+        if (resizeDir.indexOf('s') !== -1) newH = Math.max(MIN_H, Math.min(MAX_H, startH + dy));
+        if (resizeDir.indexOf('n') !== -1) { newH = Math.max(MIN_H, Math.min(MAX_H, startH - dy)); newT = startT + (startH - newH); }
+
+        hud.style.width = newW + 'px'; hud.style.height = newH + 'px';
+        hud.style.left = newL + 'px'; hud.style.top = newT + 'px';
+        hud.style.right = 'auto'; hud.style.bottom = 'auto';
+      }
+    });
+
+    window.addEventListener('mouseup', function () { isDragging = false; isResizing = false; });
+  })();
+
+  // === 全局摄像头 + MediaPipe：大厅加载时启动 ===
+  (function startGlobalCamera() {
+    var videoEl = document.getElementById('cam-video');
+    if (!videoEl) { console.warn('[Camera] #cam-video 不存在'); return; }
+
+    console.log('[Camera] 大厅加载，启动全局摄像头 + MediaPipe...');
+    navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, frameRate: 30 } })
+      .then(function (stream) {
+        videoEl.srcObject = stream;
+        videoEl.play().then(function () {
+          console.log('[Camera] ✅ 全局摄像头已启动');
+          window._globalCameraStream = stream;
+          window._globalPoseData = null;
+
+          // 初始化全局 MediaPipe Pose
+          if (typeof Pose === 'undefined') { console.warn('[Camera] MediaPipe Pose 未加载'); return; }
+          var pose = new Pose({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/' + f; } });
+          pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+          pose.onResults(function (results) {
+            if (results.poseLandmarks) {
+              window._globalPoseData = results.poseLandmarks;
+              window._globalPoseWorld = results.poseWorldLandmarks;
+            }
+          });
+
+          // 帧循环
+          var processFrame = function () {
+            if (videoEl.readyState >= 2) pose.send({ image: videoEl });
+            if (videoEl.requestVideoFrameCallback) videoEl.requestVideoFrameCallback(processFrame);
+            else setTimeout(processFrame, 1000 / 30);
+          };
+          if (videoEl.requestVideoFrameCallback) videoEl.requestVideoFrameCallback(processFrame);
+          else processFrame();
+          console.log('[Camera] ✅ 全局 MediaPipe 已启动');
+        });
+      })
+      .catch(function (err) { console.warn('[Camera] 摄像头不可用:', err.message); });
+  })();
+
+  // === 大厅手势：手臂摆动切换游戏 ===
+  (function setupLobbyGesture() {
+    var lastWristX = null, gestureCooldown = 0;
+    setInterval(function () {
+      var isLobby = document.getElementById('screen-lobby').classList.contains('show');
+      if (!isLobby || !window._globalPoseData) return;
+      if (gestureCooldown > 0) { gestureCooldown--; return; }
+
+      var lm = window._globalPoseData;
+      var lWrist = lm[15], rWrist = lm[16], lShoulder = lm[11], rShoulder = lm[12];
+      if (!lWrist || !rWrist || !lShoulder || !rShoulder) return;
+
+      // 右手超过左肩 = 向右划 → 下一个游戏
+      if (rWrist.x < lShoulder.x && Math.abs(rWrist.y - rShoulder.y) < 0.15) {
+        STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
+        updateLobbyUI(STATE.gameMode);
+        gestureCooldown = 30;
+      }
+      // 左手超过右肩 = 向左划 → 上一个游戏
+      if (lWrist.x > rShoulder.x && Math.abs(lWrist.y - lShoulder.y) < 0.15) {
+        STATE.gameMode = Math.max(0, STATE.gameMode - 1);
+        updateLobbyUI(STATE.gameMode);
+        gestureCooldown = 30;
+      }
+    }, 200); // 每 200ms 检测一次
+  })();
 
   // 初始状态
   updateLobbyUI(STATE.gameMode);

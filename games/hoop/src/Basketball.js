@@ -335,17 +335,35 @@ export class BasketballHandler {
     }
 
     safetyCheck(game) {
-        if (game.basketballBody && game.basketballBody.position.y < -2.0) {
-            console.warn('%c[BASKETBALL SAFETY] Extreme penetration detected! Forcing reset.', 'color: #FF0000; font-weight: bold;');
+        if (!game.basketballBody || game.ballAttached || game.defenderHoldingBall) return;
+
+        var bx = game.basketballBody.position.x;
+        var by = game.basketballBody.position.y;
+        var bz = game.basketballBody.position.z;
+
+        // 穿透地板 (极端情况才重置)
+        if (by < -5.0) {
+            console.warn('[BASKETBALL] 穿透地板，重置到半场');
             game.basketballBody.position.set(0, BALL_RADIUS + 0.3, 7);
             game.basketballBody.velocity.set(0, 0, 0);
             game.basketballBody.angularVelocity.set(0, 0, 0);
             game.basketballBody.collisionResponse = true;
-            if (game.basketball) {
-                game.basketball.position.set(0, BALL_RADIUS, 7);
-                game.basketball.visible = true;
-            }
-            game.ballAttached = false;
+            if (game.basketball) { game.basketball.position.set(0, BALL_RADIUS, 7); game.basketball.visible = true; }
+        }
+
+        // 球飞出界外 (XZ 超出球场)
+        var maxX = 20, maxZ = 30;
+        if (Math.abs(bx) > maxX || Math.abs(bz) > maxZ) {
+            console.log('[BASKETBALL] 球出界，重置');
+            game.basketballBody.position.set(
+                Math.sign(bx) * Math.min(Math.abs(bx), maxX - 1),
+                BALL_RADIUS + 0.3,
+                Math.sign(bz) * Math.min(Math.abs(bz), maxZ - 1)
+            );
+            game.basketballBody.velocity.set(0, 0, 0);
+            game.basketballBody.angularVelocity.set(0, 0, 0);
+            game.basketballBody.collisionResponse = true;
+            if (game.basketball) { game.basketball.position.copy(game.basketballBody.position); game.basketball.visible = true; }
         }
     }
 }
