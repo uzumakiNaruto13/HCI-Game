@@ -107,7 +107,6 @@ export class Defenders {
             }
         }
 
-        // 贴身干扰语音单次触发
         if (activeOffender) {
             for (const def of game.defenders) {
                 if (!def.hasBall) {
@@ -307,6 +306,7 @@ export class Defenders {
 
         def.hasBall = true;
         game.defenderHoldingBall = def;
+        game.basketballBody.mass = 0;
         game.basketballBody.collisionResponse = false;
         if (game.basketball) game.basketball.visible = true;
         game.ballTrail = [];

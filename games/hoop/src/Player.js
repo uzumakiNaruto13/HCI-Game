@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
     PLAYER_DESIRED_HEIGHT, PLAYER_MASS, PLAYER_CYLINDER_RADIUS,
     PLAYER_CYLINDER_HEIGHT, MOVE_SPEED, GRAVITY, JUMP_POWER, GROUND_Y,
@@ -43,68 +42,19 @@ export class Player {
     }
 
     loadPlayerModel(game) {
-        const loader = new GLTFLoader();
-        loader.load(
-            'games/hoop/models/never.glb',
-            (gltf) => {
-                const originalModel = gltf.scene;
-                const box = new THREE.Box3().setFromObject(originalModel);
-                const size = box.getSize(new THREE.Vector3());
-                if (size.y > 0) {
-                    const scale = PLAYER_DESIRED_HEIGHT / size.y;
-                    originalModel.scale.set(0.2, 0.2, 0.2);
-                }
-                box.setFromObject(originalModel);
+        // 不加载 3D 模型，创建不可见容器替代角色视觉
+        const modelContainer = new THREE.Group();
+        modelContainer.position.set(0, 0, 7);
 
-                const footY = box.min.y;
-                const modelContainer = new THREE.Group();
-                modelContainer.add(originalModel);
-                originalModel.rotation.y = -Math.PI / 2;
+        game.playerModel = modelContainer;
+        game.originalPlayerModel = modelContainer;
+        game.modelHalfHeight = PLAYER_DESIRED_HEIGHT / 2;
+        game.modelFootOffset = 0;
 
-                const forwardMarker = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.1, 8, 8),
-                    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-                );
-                forwardMarker.position.set(0, 0, 1);
-                modelContainer.add(forwardMarker);
-                modelContainer.position.set(0, -footY, 7);
-
-                game.playerModel = modelContainer;
-                game.originalPlayerModel = originalModel;
-                game.modelHalfHeight = PLAYER_DESIRED_HEIGHT / 2;
-
-                originalModel.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        child.material = new THREE.MeshStandardMaterial({
-                            map: child.material.map,
-                            normalMap: child.material.normalMap,
-                            roughness: 0.7,
-                            metalness: 0.1,
-                            color: child.material.color || 0xFFFFFF
-                        });
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
-
-                if (gltf.animations && gltf.animations.length > 0) {
-                    game.mixer = new THREE.AnimationMixer(originalModel);
-                    gltf.animations.forEach(clip => game.animations[clip.name] = clip);
-                }
-
-                game.scene.add(modelContainer);
-                this.createPlayerShadow(game);
-                game.state.isModelLoaded = true;
-                game.resetBasketball();
-            },
-            (progress) => {
-                console.log('Loading progress:', (progress.loaded / progress.total * 100).toFixed(2) + '%');
-            },
-            (error) => {
-                console.error('Error loading player model:', error);
-                this.createFallbackPlayer(game);
-            }
-        );
+        game.scene.add(modelContainer);
+        this.createPlayerShadow(game);
+        game.state.isModelLoaded = true;
+        game.resetBasketball();
     }
 
     createPlayerShadow(game) {
@@ -139,21 +89,6 @@ export class Player {
         game.staticBodies.push(game.playerBody);
     }
 
-    createFallbackPlayer(game) {
-        const geometry = new THREE.CylinderGeometry(0.3, 0.3, 1.8, 8);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x9933FF,
-            roughness: 0.5,
-            metalness: 0.3
-        });
-        game.playerModel = new THREE.Mesh(geometry, material);
-        game.playerModel.castShadow = true;
-        game.modelHalfHeight = 0.9;
-        game.playerModel.position.set(0, game.modelHalfHeight, 7);
-        game.scene.add(game.playerModel);
-        this.createPlayerShadow(game);
-        game.resetBasketball();
-    }
 
     updatePlayerShadow(game) {
         if (game.playerModel && game.playerShadow) {

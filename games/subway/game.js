@@ -24,12 +24,68 @@ SubwaySurfGame.prototype.setup = function () {
   this.slideTimer = 0;
   this.speedLevel = 1;
   this.obstacleTimer = 0;
+  this.obstacleGap = 0;
+  this.obstaclePending = 0;
   this.coinTimer = 0;
   this.bgClouds = [];
   this.bgBuildings = [];
   this.groundTiles = [];
   this.particles = [];
   this.screenShake = 0;
+  this.invincibleTimer = 0;
+  this.hitFlash = 0;
+  this._shiftHeld = false;
+  this.sprintCooldown = 0;
+  this.freezeTimer = 0;
+  this.hpMax = 7;
+  this._paused = false;
+  this.runFrames = [];
+
+  // 特殊钱币系统
+  this.specialCoins = [];
+  this.normalCoinCollected = 0;
+  this.powerInvincible = 0;
+  this.powerDoubleActive = false;
+  this.powerDoubleTimer = 0;
+  this.powerSlowActive = false;
+  this.powerSlowTimer = 0;
+  this.powerSlowSavedSpeed = 0;
+  this.runFrameIdx = 0;
+  this.runFrameTimer = 0;
+  this.jumpFrameIdx = 0;
+  this._wasJumping = false;
+
+  // 操作面板初始隐藏，ESC 暂停时才显示
+  var guide0 = document.getElementById('actionGuide0');
+  if (guide0) guide0.classList.add('hidden');
+
+  // 预加载 6 帧跑步精灵
+  for (var fi = 1; fi <= 6; fi++) {
+    var rimg = new Image();
+    rimg.onerror = function () { console.warn('[Subway] 跑步精灵加载失败:', this.src); };
+    rimg.src = 'games/subway/pictures/' + fi + '.png';
+    this.runFrames.push(rimg);
+  }
+
+  // 预加载 5 帧跳跃精灵 (Geometry Dash, 280×460)
+  this.jumpFrames = [];
+  var jumpFrameNums = [1, 4, 5, 6, 8];
+  for (var fj = 0; fj < jumpFrameNums.length; fj++) {
+    var jimg = new Image();
+    jimg.onerror = function () { console.warn('[Subway] 跳跃精灵加载失败:', this.src); };
+    jimg.src = 'games/subway/pictures/Geometry Dash/jump_frame_' + jumpFrameNums[fj] + '-removebg-preview.png';
+    this.jumpFrames.push(jimg);
+  }
+
+  // 预加载 4 种特殊钱币图片
+  this.dollarImgs = {};
+  var dollarMap = ['invincible', 'heal', 'double', 'slow'];
+  for (var di = 0; di < 4; di++) {
+    var dimg = new Image();
+    dimg.onerror = function () { console.warn('[Subway] 特殊币图片加载失败:', this.src); };
+    dimg.src = 'games/subway/pictures/dollar' + (di + 1) + '.png';
+    this.dollarImgs[dollarMap[di]] = dimg;
+  }
 
   for (var i = 0; i < 8; i++) {
     this.bgClouds.push({ x: randRange(0, 1200), y: randRange(20, 180), w: randRange(80, 160), speed: randRange(0.2, 0.6) * this.speed });
@@ -49,8 +105,10 @@ SubwaySurfGame.prototype.setup = function () {
       if (!self.isJumping) {
         self.isJumping = true;
         self.isSliding = false;
-        self.playerVY = -13 * self.speed;
-        self.emitParticles(W / 2, self.playerY - 20, 'rgba(0,212,255,', 8);
+        self.playerVY = -18 * self.speed;
+        var cx = self.canvas ? self.canvas.width / 2 : window.innerWidth / 2;
+        var cy = (self.playerY > 0) ? self.playerY : (self.canvas ? self.canvas.height / 2 + 30 : 300);
+        self.emitParticles(cx, cy, 'rgba(0,212,255,', 8);
       }
     } else if (e.code === 'ArrowDown') {
       e.preventDefault();
@@ -60,12 +118,71 @@ SubwaySurfGame.prototype.setup = function () {
       }
     } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
       self.targetSpeed = Math.min(16 * self.speed, self.targetSpeed + 1.0 * self.speed);
+      self._shiftHeld = true;
+    } else if (e.code === 'KeyX') {
+      e.preventDefault();
+      if (self.sprintCooldown <= 0 && self.freezeTimer <= 0) {
+        self._triggerSprint();
+      }
+    }
+  };
+  this._keyUpHandler = function (e) {
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+      self._shiftHeld = false;
     }
   };
   window.addEventListener('keydown', this._keyHandler);
+  window.addEventListener('keyup', this._keyUpHandler);
 
-  this.startLoop();
-  this.beginCountdown();
+  // 开场动画序列
+  this._startIntroSequence();
+};
+
+SubwaySurfGame.prototype._startIntroSequence = function () {
+  var self = this;
+  var overlay = document.getElementById('intro-overlay');
+  var frameImg = document.getElementById('intro-frame');
+  var bgm = new Audio('games/subway/sounds/The_Start_BGM.mp3');
+  bgm.volume = 0.5;
+  self._bgm = bgm;
+
+  // 预加载开场帧 (3 张)
+  var introFrames = [];
+  for (var i = 1; i <= 3; i++) {
+    var img = new Image();
+    img.src = 'games/subway/pictures/start/' + i + '.png';
+    introFrames.push(img);
+  }
+
+  var idx = 0;
+  var showNext = function () {
+    if (idx >= 3) {
+      // 所有帧展示完毕，播放 BGM 后开始游戏
+      if (overlay) overlay.style.display = 'none';
+      bgm.play().catch(function () {});
+      self.startLoop();
+      return;
+    }
+    var f = introFrames[idx];
+    if (frameImg && f && f.complete) {
+      frameImg.src = f.src;
+    }
+    idx++;
+    setTimeout(showNext, 1000);
+  };
+
+  // 等第一帧加载完再开始
+  var checkStart = function () {
+    if (introFrames[0] && introFrames[0].complete) {
+      if (overlay) overlay.style.display = 'flex';
+      if (frameImg) frameImg.src = introFrames[0].src;
+      idx = 1;
+      setTimeout(showNext, 1000);
+    } else {
+      setTimeout(checkStart, 100);
+    }
+  };
+  checkStart();
 };
 
 SubwaySurfGame.prototype.emitParticles = function(x, y, color, count) {
@@ -74,30 +191,106 @@ SubwaySurfGame.prototype.emitParticles = function(x, y, color, count) {
   }
 };
 
+SubwaySurfGame.prototype._triggerSprint = function () {
+  this.freezeTimer = 60;       // 1 秒冻结 (60fps)
+  this.sprintCooldown = 180;   // 3 秒冷却
+  this.invincibleTimer = 60;   // 冻结期间无敌
+
+  // 显示冲刺照片叠加
+  var overlay = document.getElementById('sprint-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    setTimeout(function () {
+      overlay.style.display = 'none';
+    }, 1000);
+  }
+
+  // 清除前方所有障碍物（冲刺斩击效果）
+  this.obstacles = [];
+
+  // 爆发粒子
+  var cx = this.canvas ? this.canvas.width / 2 : window.innerWidth / 2;
+  var cy = this.playerY || (this.canvas ? this.canvas.height / 2 + 30 : 300);
+  for (var i = 0; i < 20; i++) {
+    this.particles.push({
+      x: cx + randRange(-40, 40), y: cy + randRange(-40, 40),
+      vx: randRange(-10, 10), vy: randRange(-12, -3),
+      life: 1, color: 'rgba(255,255,255,', size: randRange(5, 10)
+    });
+  }
+};
+
+SubwaySurfGame.prototype._applyPowerUp = function (type) {
+  switch (type) {
+    case 'invincible':
+      this.powerInvincible = 360; // 6 秒无敌
+      break;
+    case 'heal':
+      STATE.gameStats.hp = Math.min(100, STATE.gameStats.hp + 20);
+      break;
+    case 'double':
+      this.powerDoubleActive = true;
+      this.powerDoubleTimer = 1800; // 30 秒
+      break;
+    case 'slow':
+      if (!this.powerSlowActive) {
+        this.powerSlowSavedSpeed = this.targetSpeed;
+      }
+      this.powerSlowActive = true;
+      this.powerSlowTimer = 1800; // 30 秒
+      this.targetSpeed = this.targetSpeed * 0.5;
+      break;
+  }
+};
+
 SubwaySurfGame.prototype.startLoop = function () {
   var self = this;
-  window._gameLoop0 = true;
+  if (this._running) return; // 防止重复启动
+  this._running = true;
   (function loop() {
-    if (!window._gameLoop0) return;
-    self.update();
-    self.render();
-    requestAnimationFrame(loop);
+    if (!self._running) return;
+    try {
+      self.update();
+      self.render();
+    } catch (e) {
+      console.error('[Subway] 游戏循环崩溃:', e);
+      self._running = false;
+      return;
+    }
+    self._animFrameId = requestAnimationFrame(loop);
   })();
 };
 
 SubwaySurfGame.prototype.update = function () {
   this.frameCount++;
-  this.tick();
+  // 冲刺冷却 + 冻结计时
+  if (this.sprintCooldown > 0) this.sprintCooldown--;
+  if (this.freezeTimer > 0) {
+    this.freezeTimer--;
+    // 冻结期间跳过所有游戏逻辑
+    this.render();
+    return;
+  }
+  // 无尽模式：HP 仅受碰撞影响，不自动衰减
   var stats = STATE.gameStats;
   var W = this.canvas.width, H = this.canvas.height;
 
-  this.speedLevel = 1 + Math.floor((60 - stats.time) / 10);
-  this.targetSpeed = Math.max((5 + this.speedLevel * 1.5) * this.speed, this.targetSpeed);
+  // 速度随帧数增长，600 帧 (≈10s) 后封顶
+  var cappedFrames = Math.min(this.frameCount, 600);
+  this.speedLevel = 1 + Math.floor(cappedFrames / 100);
+  var baseSpeed = (5 + this.speedLevel * 1.5) * this.speed;
+  // Shift 松开后速度缓慢衰减回基础速度
+  if (!this._shiftHeld) {
+    this.targetSpeed = lerp(this.targetSpeed, baseSpeed, 0.02);
+  }
+  this.targetSpeed = Math.max(baseSpeed, this.targetSpeed);
   this.scrollSpeed = lerp(this.scrollSpeed, this.targetSpeed, 0.06);
-  this.distance += this.scrollSpeed * 0.12;
+  // 减速能力：实际滚动速度减半
+  var effectiveSpeed = this.powerSlowActive ? this.scrollSpeed * 0.5 : this.scrollSpeed;
+  this.distance += effectiveSpeed * 0.12;
 
   var groundY = H / 2 + 30;
-  if (!this.playerY) this.playerY = groundY;
+  if (this.playerY === 0 && !this.isJumping) this.playerY = groundY;
 
   if (this.isJumping) {
     this.playerVY += 0.65 * this.speed;
@@ -117,56 +310,152 @@ SubwaySurfGame.prototype.update = function () {
     if (this.slideTimer <= 0) this.isSliding = false;
   }
 
-  var spd = this.scrollSpeed * 0.8;
+  var spd = effectiveSpeed * 0.8;
 
+  // ---- Dino 式障碍物生成 ----
+  // 使用间隔计数器保证最小反应距离，而非完全随机
   this.obstacleTimer++;
-  var spawnRate = Math.max(40, 90 - this.speedLevel * 5);
-  if (this.obstacleTimer > spawnRate && Math.random() < 0.3) {
-    var types = this.speedLevel < 3 ? ['box', 'barrier'] : ['box', 'barrier', 'train'];
-    var type = types[randInt(0, types.length)];
-    this.obstacles.push({
-      x: W + 100,
-      y: groundY - (type === 'train' ? 50 : type === 'barrier' ? 35 : 28),
-      w: type === 'train' ? 85 : type === 'barrier' ? 24 : 38,
-      h: type === 'train' ? 55 : type === 'barrier' ? 60 : 32,
-      type: type,
-      passed: false
-    });
-    this.obstacleTimer = 0;
+  this.invincibleTimer = Math.max(0, this.invincibleTimer - 1);
+
+  if (this.obstaclePending > 0) {
+    // 正在生成连续障碍物对
+    this.obstaclePending--;
+    if (this.obstaclePending === 0) {
+      // 第二个障碍物紧跟第一个之后
+      var types2 = ['box', 'barrier', 'spike'];
+      // 5级以后解锁天花板尖刺
+      if (this.speedLevel >= 5) types2.push('ceiling_spike');
+      var type2 = types2[randInt(0, types2.length)];
+      this.obstacles.push({
+        x: W + 100 + randRange(60, 120),
+        y: groundY - (type2 === 'spike' ? 15 : type2 === 'ceiling_spike' ? 180 : type2 === 'barrier' ? 35 : 28),
+        w: type2 === 'spike' ? 28 : type2 === 'ceiling_spike' ? 28 : type2 === 'barrier' ? 24 : 38,
+        h: type2 === 'spike' ? 15 : type2 === 'ceiling_spike' ? 25 : type2 === 'barrier' ? 60 : 32,
+        type: type2,
+        passed: false
+      });
+    }
+  } else {
+    // 固定间隔 — 不随速度增加障碍物密度，速度增加体现在滚动更快
+    var minGap = 450;
+    this.obstacleGap += spd;
+
+    if (this.obstacleGap > minGap) {
+      var types = ['box', 'barrier', 'spike'];
+      if (this.speedLevel >= 3) types.push('train');
+      if (this.speedLevel >= 5) types.push('ceiling_spike');
+      var type = types[randInt(0, types.length)];
+      this.obstacles.push({
+        x: W + 100,
+        y: type === 'spike' ? groundY - 15 :
+           type === 'ceiling_spike' ? 20 :
+           type === 'train' ? groundY - 50 :
+           type === 'barrier' ? groundY - 35 : groundY - 28,
+        w: type === 'spike' || type === 'ceiling_spike' ? 28 :
+           type === 'train' ? 85 :
+           type === 'barrier' ? 24 : 38,
+        h: type === 'spike' || type === 'ceiling_spike' ? 15 :
+           type === 'train' ? 55 :
+           type === 'barrier' ? 60 : 32,
+        type: type,
+        passed: false
+      });
+      this.obstacleGap = 0;
+
+      // 10% 概率出连续障碍物对
+      if (this.speedLevel >= 3 && Math.random() < 0.1) {
+        this.obstaclePending = Math.floor(randRange(6, 12));
+      } else {
+        this.obstaclePending = 0;
+      }
+    }
   }
 
+  // 金币生成
   this.coinTimer++;
   if (this.coinTimer > 50 && Math.random() < 0.3) {
     this.coins.push({ x: W + 60, y: groundY - randRange(60, 140), r: 9, collected: false, sparkle: 0 });
     this.coinTimer = 0;
+    // 每生成 20 个普通币 → 生成一枚特殊币
+    this.normalCoinCollected++;
+    if (this.normalCoinCollected >= 20) {
+      this.normalCoinCollected = 0;
+      var specTypes = ['invincible', 'heal', 'double', 'slow'];
+      var stype = specTypes[randInt(0, 4)];
+      this.specialCoins.push({
+        x: W + 80, y: groundY - randRange(80, 160),
+        r: 14, type: stype, collected: false, sparkle: 0
+      });
+    }
   }
 
+  // 碰撞检测 (含无敌帧 + 能力无敌)
+  var isInvincible = this.invincibleTimer > 0 || this.powerInvincible > 0;
   for (var i = this.obstacles.length - 1; i >= 0; i--) {
     var o = this.obstacles[i];
     o.x -= spd;
     var px = W / 2 - 15, pw = 30;
-    var py = this.isSliding ? this.playerY + 12 : this.playerY - 45;
-    var ph = this.isSliding ? 20 : 45;
-    if (!o.passed && px < o.x + o.w && px + pw > o.x && py < o.y + o.h && py + ph > o.y) {
-      stats.hp = clamp(stats.hp - 20, 0, 100);
-      this.screenShake = 12;
-      this.emitParticles(W / 2, this.playerY - 20, 'rgba(239,68,68,', 10);
+    var py = this.isSliding ? this.playerY + 10 : this.playerY - 50;
+    var ph = this.isSliding ? 20 : 50;
+    if (!o.passed && !isInvincible && px < o.x + o.w && px + pw > o.x && py < o.y + o.h && py + ph > o.y) {
+      stats.hp = clamp(stats.hp - 15, 0, 100);
+      if (stats.hp <= 0) { this.endGame(); return; }
+      this.screenShake = 28;
+      this.hitFlash = 1.0;
+      this.invincibleTimer = 55;
+      this.emitParticles(W / 2, this.playerY - 20, 'rgba(239,68,68,', 18);
+      for (var pi = 0; pi < 8; pi++) {
+        this.particles.push({
+          x: W / 2, y: this.playerY - 30,
+          vx: randRange(-8, 8), vy: randRange(-10, -2),
+          life: 1, color: 'rgba(255,180,0,', size: randRange(4, 8)
+        });
+      }
       o.passed = true;
     }
     if (o.x < -100) this.obstacles.splice(i, 1);
   }
 
+  // 普通金币收集
   for (var j = this.coins.length - 1; j >= 0; j--) {
     var cn = this.coins[j];
     cn.x -= spd;
     cn.sparkle += 0.1;
     if (!cn.collected && Math.hypot(W / 2 - cn.x, this.playerY - 30 - cn.y) < 35) {
       cn.collected = true;
-      stats.score += 5;
+      var pts = this.powerDoubleActive ? 10 : 5;
+      stats.score += pts;
       stats.cal += 0.1;
       this.emitParticles(cn.x, cn.y, 'rgba(255,215,0,', 6);
     }
     if (cn.x < -30 || cn.collected) this.coins.splice(j, 1);
+  }
+
+  // 特殊钱币收集
+  for (var sj = this.specialCoins.length - 1; sj >= 0; sj--) {
+    var sc = this.specialCoins[sj];
+    sc.x -= spd;
+    sc.sparkle += 0.1;
+    if (!sc.collected && Math.hypot(W / 2 - sc.x, this.playerY - 30 - sc.y) < 40) {
+      sc.collected = true;
+      this._applyPowerUp(sc.type);
+      this.emitParticles(sc.x, sc.y, 'rgba(255,255,255,', 12);
+    }
+    if (sc.x < -40 || sc.collected) this.specialCoins.splice(sj, 1);
+  }
+
+  // 能力计时更新
+  if (this.powerInvincible > 0) this.powerInvincible--;
+  if (this.powerDoubleTimer > 0) {
+    this.powerDoubleTimer--;
+    if (this.powerDoubleTimer <= 0) this.powerDoubleActive = false;
+  }
+  if (this.powerSlowTimer > 0) {
+    this.powerSlowTimer--;
+    if (this.powerSlowTimer <= 0) {
+      this.powerSlowActive = false;
+      this.targetSpeed = this.powerSlowSavedSpeed;
+    }
   }
 
   for (var k = this.particles.length - 1; k >= 0; k--) {
@@ -178,8 +467,10 @@ SubwaySurfGame.prototype.update = function () {
     if (p.life <= 0) this.particles.splice(k, 1);
   }
 
-  this.screenShake = lerp(this.screenShake, 0, 0.15);
-  if (Math.abs(this.screenShake) < 0.5) this.screenShake = 0;
+  this.screenShake = lerp(this.screenShake, 0, 0.06);
+  this.hitFlash = lerp(this.hitFlash, 0, 0.08);
+  if (Math.abs(this.screenShake) < 0.3) this.screenShake = 0;
+  if (this.hitFlash < 0.01) this.hitFlash = 0;
 
   for (var g = 0; g < this.groundTiles.length; g++) {
     this.groundTiles[g].x -= spd;
@@ -196,9 +487,8 @@ SubwaySurfGame.prototype.update = function () {
 
   $('dist0').textContent = Math.floor(this.distance);
   $('combo0').textContent = stats.combo;
-  $('timer0').textContent = stats.time;
+  $('timer0').textContent = '∞';
   $('cal0').textContent = fmt(stats.cal, 1);
-  UIManager.updateHP(stats.hp, 'hp0', 'hpText0');
 };
 
 SubwaySurfGame.prototype.render = function () {
@@ -305,12 +595,61 @@ SubwaySurfGame.prototype.render = function () {
     ctx.shadowBlur = 0;
   });
 
+  // 特殊钱币 (dollar 图片，统一 36px 等比例缩放)
+  this.specialCoins.forEach(function (sc) {
+    var dimg = self.dollarImgs[sc.type];
+    if (dimg && dimg.complete && dimg.naturalWidth > 0) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.6)';
+      ctx.shadowBlur = 12 + Math.sin(sc.sparkle * 3) * 4;
+      var size = 36;
+      ctx.drawImage(dimg, sc.x - size / 2, sc.y - size / 2, size, size);
+      ctx.restore();
+    }
+  });
+
   // 障碍物
   this.obstacles.forEach(function (o) {
     ctx.shadowColor = 'rgba(239,68,68,0.5)';
     ctx.shadowBlur = 15;
 
-    if (o.type === 'train') {
+    if (o.type === 'spike') {
+      // 地面尖刺 (Geometry Dash 风格)
+      ctx.fillStyle = '#ff4444';
+      ctx.shadowColor = 'rgba(255,80,80,0.8)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(o.x - o.w / 2, o.y + o.h);
+      ctx.lineTo(o.x, o.y);
+      ctx.lineTo(o.x + o.w / 2, o.y + o.h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ff8888';
+      ctx.beginPath();
+      ctx.moveTo(o.x - o.w / 4, o.y + o.h - 2);
+      ctx.lineTo(o.x, o.y + 4);
+      ctx.lineTo(o.x + o.w / 4, o.y + o.h - 2);
+      ctx.closePath();
+      ctx.fill();
+    } else if (o.type === 'ceiling_spike') {
+      // 天花板尖刺
+      ctx.fillStyle = '#ff4444';
+      ctx.shadowColor = 'rgba(255,80,80,0.8)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(o.x - o.w / 2, o.y);
+      ctx.lineTo(o.x, o.y + o.h);
+      ctx.lineTo(o.x + o.w / 2, o.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ff8888';
+      ctx.beginPath();
+      ctx.moveTo(o.x - o.w / 4, o.y + 3);
+      ctx.lineTo(o.x, o.y + o.h - 5);
+      ctx.lineTo(o.x + o.w / 4, o.y + 3);
+      ctx.closePath();
+      ctx.fill();
+    } else if (o.type === 'train') {
       var tg = ctx.createLinearGradient(o.x, o.y, o.x, o.y + o.h);
       tg.addColorStop(0, '#e53e3e');
       tg.addColorStop(1, '#991b1b');
@@ -364,99 +703,51 @@ SubwaySurfGame.prototype.render = function () {
     ctx.shadowBlur = 0;
   });
 
-  // 玩家
+  // 玩家精灵动画
   var px = W / 2;
   var py = this.playerY;
   ctx.save();
-  ctx.shadowColor = 'rgba(0,212,255,0.6)';
-  ctx.shadowBlur = 25;
 
-  if (this.isSliding) {
-    ctx.fillStyle = '#7c3aed';
-    ctx.beginPath();
-    ctx.roundRect(px - 28, py + 2, 56, 20, 10);
-    ctx.fill();
-    ctx.fillStyle = '#00d4ff';
-    ctx.beginPath();
-    ctx.arc(px - 15, py + 5, 12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(px - 18, py + 3, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#080818';
-    ctx.beginPath();
-    ctx.arc(px - 17, py + 4, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(91,33,182,0.5)';
-    ctx.fillRect(px + 8, py + 8, 18, 5);
-  } else if (this.isJumping) {
-    var jOff = Math.sin(Math.abs(this.playerVY) * 0.1) * 3;
-    ctx.fillStyle = '#7c3aed';
-    ctx.beginPath();
-    ctx.roundRect(px - 16, py - 28 + jOff, 32, 32, 8);
-    ctx.fill();
-    ctx.fillStyle = '#00d4ff';
-    ctx.beginPath();
-    ctx.arc(px, py - 40 + jOff, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(px - 5, py - 42 + jOff, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(px + 5, py - 42 + jOff, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#080818';
-    ctx.beginPath();
-    ctx.arc(px - 4, py - 41 + jOff, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(px + 6, py - 41 + jOff, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f97316';
-    ctx.beginPath();
-    ctx.ellipse(px, py - 48 + jOff, 7, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#5b21b6';
-    ctx.fillRect(px - 10, py + 2 + jOff, 7, 12);
-    ctx.fillRect(px + 3, py + 2 + jOff, 7, 12);
+  if (this.isJumping) {
+    // 跳跃：快速切换 8 帧 GD 精灵
+    if (!this._wasJumping) {
+      this.jumpFrameIdx = 0;  // 起跳时重置
+    }
+    this.runFrameTimer++;
+    if (this.runFrameTimer >= 3) {  // 每 3 帧切一张 (快速)
+      this.runFrameTimer = 0;
+      this.jumpFrameIdx = (this.jumpFrameIdx + 1) % 5;
+    }
+    var jframe = this.jumpFrames[this.jumpFrameIdx];
+    if (jframe && jframe.complete) {
+      var jfw = 56, jfh = 92;
+      var jOff = Math.sin(Math.abs(this.playerVY) * 0.1) * 3;
+      ctx.drawImage(jframe, px - jfw / 2, py - 70 + jOff, jfw, jfh);
+    }
+  } else if (this.isSliding) {
+    // 滑铲：用跑步帧
+    this.runFrameTimer++;
+    if (this.runFrameTimer >= 8) {
+      this.runFrameTimer = 0;
+      this.runFrameIdx = (this.runFrameIdx + 1) % 6;
+    }
+    var sframe = this.runFrames[this.runFrameIdx];
+    if (sframe && sframe.complete) {
+      ctx.drawImage(sframe, px - 28, py - 15, 56, 50);
+    }
   } else {
-    var lp = Math.sin(this.frameCount * 0.25) * 10;
-    var ap = Math.sin(this.frameCount * 0.25) * 8;
-    ctx.fillStyle = '#7c3aed';
-    ctx.beginPath();
-    ctx.roundRect(px - 15, py - 30, 30, 38, 8);
-    ctx.fill();
-    ctx.fillStyle = '#00d4ff';
-    ctx.beginPath();
-    ctx.arc(px, py - 42, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(px - 5, py - 44, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(px + 5, py - 44, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#080818';
-    ctx.beginPath();
-    ctx.arc(px - 4, py - 43, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(px + 6, py - 43, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f97316';
-    ctx.beginPath();
-    ctx.ellipse(px, py - 50, 9, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#7c3aed';
-    ctx.fillRect(px - 24, py - 20 + ap, 7, 18);
-    ctx.fillRect(px + 17, py - 20 - ap, 7, 18);
-    ctx.fillStyle = '#5b21b6';
-    ctx.fillRect(px - 10, py + 5, 7, 12 + lp);
-    ctx.fillRect(px + 3, py + 5, 7, 12 - lp);
+    // 跑步：正常循环 6 帧
+    this.runFrameTimer++;
+    if (this.runFrameTimer >= 8) {
+      this.runFrameTimer = 0;
+      this.runFrameIdx = (this.runFrameIdx + 1) % 6;
+    }
+    var rframe = this.runFrames[this.runFrameIdx];
+    if (rframe && rframe.complete) {
+      ctx.drawImage(rframe, px - 28, py - 68, 56, 92);
+    }
   }
+  this._wasJumping = this.isJumping;
   ctx.restore();
 
   // 粒子
@@ -469,6 +760,40 @@ SubwaySurfGame.prototype.render = function () {
 
   ctx.restore();
 
+  // 爱心血量 (7 颗心，每颗 ≈14.3 HP)
+  var hearts = Math.ceil(STATE.gameStats.hp / 15);
+  for (var hi = 0; hi < 7; hi++) {
+    var hx = 20 + hi * 30;
+    var hy = 20;
+    // 爱心路径
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(0.7, 0.7);
+    ctx.beginPath();
+    ctx.moveTo(0, 6);
+    ctx.bezierCurveTo(-8, 0, -16, -8, -16, -16);
+    ctx.bezierCurveTo(-16, -24, -8, -28, 0, -22);
+    ctx.bezierCurveTo(8, -28, 16, -24, 16, -16);
+    ctx.bezierCurveTo(16, -8, 8, 0, 0, 6);
+    ctx.closePath();
+    if (hi < hearts) {
+      ctx.fillStyle = '#ff3366';
+      ctx.shadowColor = 'rgba(255,51,102,0.6)';
+      ctx.shadowBlur = 6;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 红色闪屏叠加 (碰撞反馈)
+  if (this.hitFlash > 0.01) {
+    ctx.fillStyle = 'rgba(255,30,0,' + (this.hitFlash * 0.35) + ')';
+    ctx.fillRect(-20, -20, W + 40, H + 40);
+  }
+
   // 速度UI
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.beginPath();
@@ -479,10 +804,55 @@ SubwaySurfGame.prototype.render = function () {
   ctx.textAlign = 'left';
   ctx.fillText('速度 x' + this.speedLevel + ' | ' + fmt(this.scrollSpeed, 1) + ' km/h', 18, H - 26);
   ctx.textAlign = 'start';
+
+  // 能力状态栏
+  var activeBuffs = [];
+  if (this.powerInvincible > 0) activeBuffs.push('🛡' + (this.powerInvincible / 60).toFixed(1) + 's');
+  if (this.powerDoubleActive) activeBuffs.push('x2 ' + (this.powerDoubleTimer / 60).toFixed(0) + 's');
+  if (this.powerSlowActive) activeBuffs.push('🐢' + (this.powerSlowTimer / 60).toFixed(0) + 's');
+  if (activeBuffs.length > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    var buffText = activeBuffs.join('  ');
+    var buffW = ctx.measureText(buffText).width + 20;
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - buffW / 2, 52, buffW, 28, 6);
+    ctx.fill();
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(buffText, W / 2, 72);
+    ctx.textAlign = 'start';
+  }
+
+  // 冲刺冷却指示器
+  if (this.sprintCooldown > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(W - 100, H - 48, 85, 32, 6);
+    ctx.fill();
+    ctx.fillStyle = '#888';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('[X] ' + (this.sprintCooldown / 60).toFixed(1) + 's', W - 20, H - 26);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(W - 100, H - 48, 85, 32, 6);
+    ctx.fill();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('[X] 就绪', W - 20, H - 26);
+    ctx.textAlign = 'start';
+  }
 };
 
 SubwaySurfGame.prototype.endGame = function () {
-  window._gameLoop0 = false;
+  this._running = false;
+  if (this._bgm) { this._bgm.pause(); this._bgm = null; }
+  if (this._animFrameId) { cancelAnimationFrame(this._animFrameId); this._animFrameId = null; }
   if (this._keyHandler) window.removeEventListener('keydown', this._keyHandler);
+  if (this._keyUpHandler) window.removeEventListener('keyup', this._keyUpHandler);
   GameEngine.prototype.endGame.call(this);
 };

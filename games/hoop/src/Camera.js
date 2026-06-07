@@ -14,6 +14,20 @@ export class CameraController {
         game.cameraAngleX = CAMERA_ANGLE_X_INIT;
     }
 
+    setupPointerLock(game) {
+        window.addEventListener('mousemove', (event) => {
+            if (document.pointerLockElement === game.renderer.domElement) {
+                game.cameraAngleY -= event.movementX * 0.002;
+                game.cameraAngleX -= event.movementY * 0.002;
+                game.cameraAngleX = Math.max(-0.2, Math.min(1.2, game.cameraAngleX));
+            }
+        });
+
+        game.renderer.domElement.addEventListener('click', () => {
+            game.renderer.domElement.requestPointerLock();
+        });
+    }
+
     update(game) {
         const cameraOffset = new THREE.Vector3(
             Math.sin(game.cameraAngleY) * game.cameraDistance,

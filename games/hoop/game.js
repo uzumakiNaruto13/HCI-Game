@@ -1,6 +1,6 @@
 // ====================================================================
-// games/hoop/game.js — 3D 篮球视觉交互游戏 (合并自 manba 项目)
-// 基于 Three.js + Cannon-es + GameEngine 框架
+// games/hoop/game.js — 3D 篮球视觉交互游戏
+// 基于原始 BasketballGame 架构 + GameEngine 平台包装
 // ====================================================================
 
 import * as THREE from 'three';
@@ -14,10 +14,13 @@ import { CameraController } from './src/Camera.js';
 import { UIManager } from './src/UI.js';
 import { SoundManager } from './src/Sound.js';
 import { EffectsManager } from './src/Effects.js';
+import { PoseTracker } from './src/PoseTracker.js';
+import { SPRINT_DURATION, SPRINT_COOLDOWN, SPRINT_SPEED } from './src/constants.js';
 
 window.KobeShootingGame = function () {
   GameEngine.call(this, 'screen-game-hoop', 1);
 
+  // ---- 同原始 BasketballGame 构造函数 ----
   this.clock = new THREE.Clock();
   this.sceneManager = new SceneManager(this);
   this.physics = new PhysicsWorld(this);
@@ -28,6 +31,7 @@ window.KobeShootingGame = function () {
   this.player = new Player(this);
   this.basketballHandler = new BasketballHandler(this);
   this.defendersHandler = new Defenders(this);
+  this.poseTracker = new PoseTracker(this);
 
   this.score = 0;
   this.opponentScore = 0;
@@ -35,6 +39,7 @@ window.KobeShootingGame = function () {
   this.freezeTimer = 0;
   this.freezeDuration = 0.2;
 
+  // 键盘状态
   this.keys = {
     w: false, a: false, s: false, d: false,
     ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
@@ -55,18 +60,16 @@ KobeShootingGame.prototype = Object.create(GameEngine.prototype);
 KobeShootingGame.prototype.constructor = KobeShootingGame;
 
 // ====================================================================
-// setup — 初始化 3D 游戏
+// setup — 同原始 init() 的完整 3D 初始化流程
 // ====================================================================
 
 KobeShootingGame.prototype.setup = function () {
   GameEngine.prototype.setup.call(this);
 
-  // 隐藏 2D Canvas，使用 Three.js WebGL 渲染
   this.canvas.style.display = 'none';
-
   var self = this;
 
-  // 初始化所有 3D 组件 (顺序不能乱)
+  // ---- 原始 BasketballGame.init() 流程 ----
   this.sceneManager.createScene(this);
   this.sceneManager.createCamera(this);
   this.sceneManager.createRenderer(this);
@@ -82,54 +85,20 @@ KobeShootingGame.prototype.setup = function () {
   this.player.createHandMarker(this);
   this.basketballHandler.createBasketball(this);
   this.player.loadPlayerModel(this);
+  this.cameraCtrl.setupPointerLock(this);
   this.sceneManager.setupWindowResize(this);
   this.ui.setupDunkVideo(this);
   this.defendersHandler.initTestDefenders(this);
 
-  // 将防守者感叹号精灵加入场景
   if (this.exclamationSprite) this.scene.add(this.exclamationSprite);
 
-  // 初始比分显示
   this.sceneManager.updateScoreDisplay(this);
 
-  // 键盘支持 (辅助操作)
+  // 键盘 + 体感
   this._setupKeyboard();
+  this.poseTracker.setupPoseDetection(this);
 
-  // 体感动作映射 — 核心：将父框架识别的动作转化为游戏操作
-  this.onAction = function (result, now) {
-    if (!result) return;
-
-    // 准备阶段也要允许捡球 (让玩家在倒计时结束后就能操作)
-    if (!self.state.isPlaying) return;
-
-    if (result.action === 'shoot') {
-      if (self.ballAttached) {
-        // 持球时：出手投篮
-        var power = self.isCharging ? self.displayProgress : 0.7;
-        self.basketballHandler.shootFromHand(self, power);
-        self.isCharging = false;
-        self.displayProgress = 0;
-      } else if (self.basketballBody && self.basketball.visible) {
-        // 未持球时：尝试捡球
-        self.basketballHandler.attachBall(self);
-      }
-    } else if (result.action === 'jump') {
-      if (!self.isJumping && self.state.isModelLoaded) {
-        self.verticalVelocity = self.jumpPower;
-        self.isJumping = true;
-        if (self.playerBody) self.playerBody.velocity.y = self.jumpPower;
-        // 跳跃时如果持球且靠近篮筐 → 扣篮
-        if (self.ballAttached) {
-          self.basketballHandler.performDunk(self);
-        }
-      }
-    }
-
-    // 所有动作都更新 HP/分数/卡路里
-    self.handleActionResult(result, now);
-  };
-
-  // 准备界面 → 倒计时 → 开始游戏
+  // 准备界面 → 开始
   this.showReadyScreen(function () {
     self.state.isPlaying = true;
     self._startGameLoop();
@@ -138,19 +107,26 @@ KobeShootingGame.prototype.setup = function () {
 };
 
 // ====================================================================
-// 键盘支持 (保留基本操作，体感优先)
+// 键盘输入 (参照原始 InputManager)
 // ====================================================================
 
 KobeShootingGame.prototype._setupKeyboard = function () {
   var self = this;
 
-  this._keydownHandler = function (event) {
-    if (!self.running) return;
+  window.addEventListener('blur', function () {
+    Object.keys(self.keys).forEach(function (k) { self.keys[k] = false; });
+    if (self.playerBody) {
+      self.playerBody.velocity.x = 0;
+      self.playerBody.velocity.z = 0;
+    }
+  });
 
+  this._keydownHandler = function (event) {
     var mk = ['w', 'a', 's', 'd', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'];
     if (mk.indexOf(event.key) !== -1) {
       self.keys[event.key] = true;
       event.preventDefault();
+      return;
     }
 
     if (event.code === 'Space') {
@@ -160,36 +136,66 @@ KobeShootingGame.prototype._setupKeyboard = function () {
         self.isJumping = true;
         if (self.playerBody) self.playerBody.velocity.y = self.jumpPower;
       }
+      return;
     }
 
     if (event.key === 'e' || event.key === 'E') {
       event.preventDefault();
       if (!self.state.isPlaying) return;
+      if (self.isCharging) self.isCharging = false;
       if (self.ballAttached) {
         self.basketballHandler.detachBall(self);
       } else {
         self.basketballHandler.attachBall(self);
       }
+      return;
+    }
+
+    if (event.key === 'x' || event.key === 'X') {
+      event.preventDefault();
+      if (!self.state.isPlaying) return;
+      self.performSprint();
+      return;
     }
 
     if (event.key === 'j' || event.key === 'J') {
       event.preventDefault();
       if (!self.state.isPlaying || !self.ballAttached) return;
-      self.isCharging = true;
-      self.chargeStartTime = performance.now() / 1000;
-      self.displayProgress = 0;
+      if (!self.isCharging) {
+        self.isCharging = true;
+        self.chargeStartTime = performance.now() / 1000;
+        self.displayProgress = 0;
+      }
+      return;
+    }
+
+    if (event.key === 'q' || event.key === 'Q') {
+      event.preventDefault();
+      if (!self.state.isPlaying) return;
+      if (self.defenderHoldingBall) {
+        self.defendersHandler.performPlayerSteal(self);
+      }
+      return;
     }
 
     if (event.key === 'k' || event.key === 'K') {
       event.preventDefault();
       if (self.state.isPlaying) self.basketballHandler.performDunk(self);
+      return;
     }
 
-    if (event.key === 'q' || event.key === 'Q') {
+    if (event.key === 'l' || event.key === 'L') {
       event.preventDefault();
-      if (self.state.isPlaying && self.defenderHoldingBall) {
-        self.defendersHandler.performPlayerSteal(self);
+      self.sceneManager.toggleLights(self);
+      return;
+    }
+
+    if (event.key === 'f' || event.key === 'F') {
+      event.preventDefault();
+      if (self.isDialogActive && self.ui.advanceDialog) {
+        self.ui.advanceDialog(self);
       }
+      return;
     }
   };
 
@@ -198,6 +204,7 @@ KobeShootingGame.prototype._setupKeyboard = function () {
     if (mk.indexOf(event.key) !== -1) {
       self.keys[event.key] = false;
       event.preventDefault();
+      return;
     }
 
     if (event.key === 'j' || event.key === 'J') {
@@ -216,7 +223,45 @@ KobeShootingGame.prototype._setupKeyboard = function () {
 };
 
 // ====================================================================
-// 创建篮球架 (双篮筐：玩家侧 Z-18.65 + 对手侧 Z+18.65)
+// 冲刺 (X 键)
+// ====================================================================
+
+KobeShootingGame.prototype.performSprint = function () {
+  if (this.sprintCooldown > 0 || !this.playerBody) return;
+
+  this.isSprinting = true;
+  this.sprintTimer = SPRINT_DURATION;
+  this.sprintCooldown = SPRINT_COOLDOWN;
+
+  var moveX = 0, moveZ = 0;
+  if (this.keys.w || this.keys.ArrowUp) moveZ -= 1;
+  if (this.keys.s || this.keys.ArrowDown) moveZ += 1;
+  if (this.keys.a || this.keys.ArrowLeft) moveX -= 1;
+  if (this.keys.d || this.keys.ArrowRight) moveX += 1;
+
+  var dashDir = new THREE.Vector3(0, 0, 0);
+
+  if (moveX !== 0 || moveZ !== 0) {
+    var len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+    var forward = new THREE.Vector3(-Math.sin(this.cameraAngleY), 0, -Math.cos(this.cameraAngleY));
+    var right = new THREE.Vector3(Math.cos(this.cameraAngleY), 0, -Math.sin(this.cameraAngleY));
+    dashDir.addScaledVector(forward, -(moveZ / len));
+    dashDir.addScaledVector(right, moveX / len);
+  } else {
+    dashDir.set(-Math.sin(this.cameraAngleY), 0, -Math.cos(this.cameraAngleY));
+  }
+
+  this.playerBody.wakeUp();
+  this.playerBody.velocity.x = dashDir.x * SPRINT_SPEED;
+  this.playerBody.velocity.z = dashDir.z * SPRINT_SPEED;
+
+  if (this.rgbShiftPass) {
+    this.rgbShiftPass.uniforms['amount'].value = 0.02;
+  }
+};
+
+// ====================================================================
+// 篮球架 (双篮筐)
 // ====================================================================
 
 KobeShootingGame.prototype._createBasketballHoop = function () {
@@ -326,14 +371,12 @@ KobeShootingGame.prototype._createBasketballHoop = function () {
 
     hoopGroup.add(g);
 
-    // 篮板物理
     var bb = new CANNON.Body({ mass: 0, material: self.backboardMaterial });
     bb.addShape(new CANNON.Box(new CANNON.Vec3(1.2, 1.0, 0.15)));
     bb.position.set(0, 3.9, boardZ);
     self.world.addBody(bb);
     self.staticBodies.push(bb);
 
-    // 篮筐物理
     var rb = new CANNON.Body({ mass: 0, material: self.hoopMaterial, collisionFilterGroup: 1 });
     rb.addShape(new CANNON.Cylinder(0.45, 0.45, 0.08, 16));
     rb.position.set(0, 3.05, rimZ);
@@ -356,7 +399,15 @@ KobeShootingGame.prototype._createBasketballHoop = function () {
 };
 
 // ====================================================================
-// 游戏主循环
+// 获取手部世界坐标 (供 UI charge bar 使用)
+// ====================================================================
+
+KobeShootingGame.prototype.getHandWorldPos = function () {
+  return this.player.getHandWorldPos(this);
+};
+
+// ====================================================================
+// 游戏主循环 (同原始 animate)
 // ====================================================================
 
 KobeShootingGame.prototype._startGameLoop = function () {
@@ -374,7 +425,7 @@ KobeShootingGame.prototype._update3D = function () {
   var unscaledDelta = this.clock.getDelta();
   var delta = unscaledDelta;
 
-  // 未开始游戏时只渲染不更新逻辑
+  // 暂停时仅渲染
   if (!this.state.isPlaying) {
     this.player.syncModelWhenPaused(this);
     if (this.basketballBody && this.basketball) {
@@ -386,51 +437,49 @@ KobeShootingGame.prototype._update3D = function () {
     return;
   }
 
-  // === 以下仅游戏进行中执行 ===
+  // ---- 游戏逻辑 (同原始 animate) ----
 
-  // HP 衰减 + 计时检查 (每帧)
   this.tick();
 
-  // 冻结帧
   if (this.freezeTimer > 0) {
     this.freezeTimer -= delta;
     delta = 0;
   }
 
   if (this.sprintCooldown > 0) this.sprintCooldown -= delta;
+  if (this.sprintTimer > 0) {
+    this.sprintTimer -= delta;
+    if (this.sprintTimer <= 0) {
+      this.isSprinting = false;
+      if (this.rgbShiftPass) this.rgbShiftPass.uniforms['amount'].value = 0.0;
+    }
+  }
 
   delta = this.effects.updateSlowMotion(this, delta);
   this.player.handleMovement(this, delta);
+  this.poseTracker.updatePose(this, delta);
 
-  // 动画混合器
-  if (this.mixer) this.mixer.update(delta);
+  if (this.mixer && !(this.lastPoseWorldData && this.lastPoseData)) {
+    this.mixer.update(delta);
+  }
 
-  // AI
   this.defendersHandler.updateDefenders(this, delta);
-
-  // 物理
   this.physics.step(this, unscaledDelta);
   this.player.updateJump(this, delta);
   this.player.syncBallToHand(this);
   this.basketballHandler.safetyCheck(this);
   this.physics.syncPhysicsBodies(this);
 
-  // UI
   this.ui.updateChargeBar(this, delta);
-
-  // 特效
   this.effects.updateBallTrailPoints(this);
   this.basketballHandler.checkScoring(this);
   this.effects.updateParticles(this);
 
-  // 相机 + 渲染
   this.cameraCtrl.update(this);
   this.composer.render();
 
-  // HUD
   this._syncHUD();
 
-  // 胜利
   if (this.score >= 11 && this.slowMotionTimer <= 0) {
     this.sound.playGameWinner(this);
     this.slowMotionTimer = 0.5;
@@ -438,7 +487,7 @@ KobeShootingGame.prototype._update3D = function () {
 };
 
 // ====================================================================
-// HUD 同步
+// HUD 同步 (平台集成)
 // ====================================================================
 
 KobeShootingGame.prototype._syncHUD = function () {
@@ -446,14 +495,36 @@ KobeShootingGame.prototype._syncHUD = function () {
   var scoreEl = document.getElementById('score1');
   var timerEl = document.getElementById('timer1');
   var calEl = document.getElementById('cal1');
-  var accEl = document.getElementById('acc1');
   var hintEl = document.getElementById('hint1');
 
   if (scoreEl) scoreEl.textContent = this.score;
   if (timerEl) timerEl.textContent = stats.time;
   if (calEl) calEl.textContent = fmt(stats.cal, 1);
-  if (accEl) accEl.textContent = '--';
-  UIManager.updateHP(stats.hp, 'hp1', 'hpText1');
+
+  // 冲刺 HUD
+  var dashMask = document.getElementById('dash-cooldown-mask');
+  var dashTimer = document.getElementById('dash-timer-text');
+  var dashIcon = document.getElementById('dash-icon-box');
+
+  if (dashMask && dashTimer && dashIcon) {
+    if (this.sprintCooldown > 0) {
+      var progress = this.sprintCooldown / SPRINT_COOLDOWN;
+      dashMask.style.height = (progress * 100) + '%';
+      dashTimer.textContent = this.sprintCooldown.toFixed(1) + 's';
+      if (!dashIcon.classList.contains('cooldown')) {
+        dashIcon.classList.add('cooldown');
+        dashIcon.classList.remove('ready-flash');
+      }
+    } else {
+      dashMask.style.height = '0%';
+      dashTimer.textContent = 'READY';
+      if (dashIcon.classList.contains('cooldown')) {
+        dashIcon.classList.remove('cooldown');
+        dashIcon.classList.add('ready-flash');
+        setTimeout(function () { dashIcon.classList.remove('ready-flash'); }, 400);
+      }
+    }
+  }
 
   if (hintEl) {
     var hint;
@@ -469,7 +540,7 @@ KobeShootingGame.prototype._syncHUD = function () {
 };
 
 // ====================================================================
-// 结束游戏 (清理资源)
+// 结束游戏
 // ====================================================================
 
 KobeShootingGame.prototype.endGame = function () {
@@ -477,7 +548,10 @@ KobeShootingGame.prototype.endGame = function () {
     cancelAnimationFrame(this._animFrameId);
     this._animFrameId = null;
   }
-  // 移除键盘事件监听
+  if (this.cameraStream) {
+    this.cameraStream.getTracks().forEach(function (track) { track.stop(); });
+    this.cameraStream = null;
+  }
   if (this._keydownHandler) {
     window.removeEventListener('keydown', this._keydownHandler);
     this._keydownHandler = null;

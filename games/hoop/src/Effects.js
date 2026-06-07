@@ -14,7 +14,9 @@ export class EffectsManager {
     }
 
     createBallTrail(game) {
+        const positions = new Float32Array(game.ballTrailMax * 3);
         const trailGeometry = new THREE.BufferGeometry();
+        trailGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         const trailMaterial = new THREE.LineBasicMaterial({
             color: 0xff6600,
             linewidth: 1,
@@ -32,11 +34,14 @@ export class EffectsManager {
 
         for (let i = 0; i < particleCount; i++) {
             const size = 0.15 + Math.random() * 0.15;
-            const geometry = new THREE.BoxGeometry(size, size, size);
+            if (!game._sharedFireGeo) {
+                game._sharedFireGeo = new THREE.BoxGeometry(1, 1, 1);
+            }
+            const geometry = game._sharedFireGeo;
             const color = colors[Math.floor(Math.random() * colors.length)];
             const material = new THREE.MeshBasicMaterial({ color: color });
             const particle = new THREE.Mesh(geometry, material);
-
+            particle.scale.set(size, size, size);
             particle.position.copy(position);
             particle.userData.velocity = new THREE.Vector3(
                 (Math.random() - 0.5) * 0.3,
@@ -103,7 +108,9 @@ export class EffectsManager {
 
             if (particle.userData.life <= 0) {
                 game.scene.remove(particle);
-                particle.geometry.dispose();
+                if (particle.geometry !== game._sharedFireGeo) {
+                    particle.geometry.dispose();
+                }
                 particle.material.dispose();
                 game.particles.splice(i, 1);
             }
@@ -132,17 +139,16 @@ export class EffectsManager {
             return;
         }
 
-        const positions = new Float32Array(points.length * 3);
-        for (let i = 0; i < points.length; i++) {
-            positions[i * 3] = points[i].x;
-            positions[i * 3 + 1] = points[i].y;
-            positions[i * 3 + 2] = points[i].z;
+        const posAttr = game.ballTrailLine.geometry.attributes.position;
+        const arr = posAttr.array;
+        const len = Math.min(points.length, game.ballTrailMax);
+        for (let i = 0; i < len; i++) {
+            arr[i * 3] = points[i].x;
+            arr[i * 3 + 1] = points[i].y;
+            arr[i * 3 + 2] = points[i].z;
         }
-
-        game.ballTrailLine.geometry.dispose();
-        game.ballTrailLine.geometry = new THREE.BufferGeometry();
-        game.ballTrailLine.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        game.ballTrailLine.geometry.setDrawRange(0, points.length);
+        posAttr.needsUpdate = true;
+        game.ballTrailLine.geometry.setDrawRange(0, len);
         game.ballTrailLine.visible = true;
     }
 

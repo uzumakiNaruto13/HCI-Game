@@ -159,6 +159,7 @@ function initSystem() {
       e.preventDefault();
       startGame(STATE.gameMode);
     }
+<<<<<<< HEAD
 
     // 数字键快速切换 (1/2/3)
     if (isLobby && e.key >= '1' && e.key <= '3') {
@@ -173,6 +174,28 @@ function initSystem() {
       if (guide) {
         guide.classList.toggle('hidden');
         console.log('[快捷键] 操作映射面板:', guide.classList.contains('hidden') ? '隐藏' : '显示');
+=======
+    // ESC = 暂停/继续 (暂停时显示操作面板，运行时隐藏)
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (currentGame && currentGame._paused !== undefined) {
+        var guide = document.getElementById('actionGuide' + STATE.gameMode);
+        if (currentGame._paused) {
+          // 恢复游戏
+          currentGame._paused = false;
+          if (guide) guide.classList.add('hidden');
+          currentGame.startLoop();
+        } else if (currentGame._running) {
+          // 暂停游戏
+          currentGame._paused = true;
+          currentGame._running = false;
+          if (guide) guide.classList.remove('hidden');
+          if (currentGame._animFrameId) {
+            cancelAnimationFrame(currentGame._animFrameId);
+            currentGame._animFrameId = null;
+          }
+        }
+>>>>>>> d703222 (fix:修改了第一款游戏的体验感问题，修复了第二款游戏在抢球中卡死的问题)
       }
     }
   });
