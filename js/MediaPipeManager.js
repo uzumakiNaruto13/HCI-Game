@@ -35,7 +35,7 @@ class MediaPipeManager {
         }
 
         // === 主方案：外接 IP 摄像头 ===
-        var ipCamUrl = 'http://10.124.123.191:8080';
+        var ipCamUrl = 'http://10.160.169.210:8080';
         var ipSuccess = await this._tryIPCamera(ipCamUrl);
         if (ipSuccess) {
             console.log('[MediaPipeManager] ✅ 外接摄像头已连接');

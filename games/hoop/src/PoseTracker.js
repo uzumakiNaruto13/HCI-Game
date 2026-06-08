@@ -106,46 +106,39 @@ export class PoseTracker {
                 }
                 if (game.cachedBones.Hips && game.initialHipsPos) game.cachedBones.Hips.position.copy(game.initialHipsPos);
 
-                // ---- 脚部锁定 + IK 膝盖折叠 ----
-                if (game.cachedBones.LeftUpperLeg && game.cachedBones.RightUpperLeg) {
-                    if (!game._footLock) game._footLock = { isLocked: false, lx: 0, lz: 0, rx: 0, rz: 0 };
-                    var isWalking = game._walkState && game._walkState.activeTimer > 0;
+                // ---- 向量 FK 腿部绑定：基于 3D 世界坐标的 1:1 腿部映射 ----
+                var wlmLeg = game.lastPoseWorldData;
+                if (wlmLeg && game.cachedBones.LeftUpperLeg && game.cachedBones.RightUpperLeg) {
+                    var lHipW = wlmLeg[23], lKneeW = wlmLeg[25], lAnkleW = wlmLeg[27];
+                    var rHipW = wlmLeg[24], rKneeW = wlmLeg[26], rAnkleW = wlmLeg[28];
+                    var visThresh = 0.6;
 
-                    if (!isWalking) {
-                        if (!game._footLock.isLocked) {
-                            game._footLock.lx = game.playerModel.position.x - 0.2;
-                            game._footLock.lz = game.playerModel.position.z;
-                            game._footLock.rx = game.playerModel.position.x + 0.2;
-                            game._footLock.rz = game.playerModel.position.z;
-                            game._footLock.isLocked = true;
+                    // 左腿
+                    if (lHipW && lKneeW && lAnkleW && lKneeW.visibility > visThresh) {
+                        var hipVL = new THREE.Vector3(lHipW.x, lHipW.y, -lHipW.z);
+                        var kneeVL = new THREE.Vector3(lKneeW.x, lKneeW.y, -lKneeW.z);
+                        var ankleVL = new THREE.Vector3(lAnkleW.x, lAnkleW.y, -lAnkleW.z);
+                        var upperDirL = new THREE.Vector3().subVectors(kneeVL, hipVL).normalize();
+                        var targetQuatUL = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), upperDirL);
+                        game.cachedBones.LeftUpperLeg.quaternion.slerp(targetQuatUL, 0.3);
+                        if (game.cachedBones.LeftLowerLeg) {
+                            var lowerDirL = new THREE.Vector3().subVectors(ankleVL, kneeVL).normalize();
+                            game.cachedBones.LeftLowerLeg.rotation.x = upperDirL.angleTo(lowerDirL);
                         }
-                        var tcX = (game._footLock.lx + game._footLock.rx) / 2;
-                        var tcZ = (game._footLock.lz + game._footLock.rz) / 2;
-                        game.playerModel.position.x += (tcX - game.playerModel.position.x) * 0.2;
-                        game.playerModel.position.z += (tcZ - game.playerModel.position.z) * 0.2;
-                    } else {
-                        game._footLock.isLocked = false;
                     }
 
-                    // IK 膝盖折叠：骨盆世界高度 → 自动弯膝
-                    var hipWorldPos = new THREE.Vector3();
-                    game.cachedBones.Hips.getWorldPosition(hipWorldPos);
-                    var hipHeight = hipWorldPos.y;
-                    var straightLegLen = game.modelHalfHeight * 0.9;
-                    var compression = straightLegLen - hipHeight;
-                    if (compression > 0) {
-                        var ratio = compression / straightLegLen;
-                        ratio = Math.max(-0.99, Math.min(0.99, ratio)); // 防 NaN 安全锁
-                        var bendAngle = Math.asin(ratio);
-                        game.cachedBones.LeftUpperLeg.rotation.x = -bendAngle;
-                        if (game.cachedBones.LeftLowerLeg) game.cachedBones.LeftLowerLeg.rotation.x = bendAngle * 2.0;
-                        game.cachedBones.RightUpperLeg.rotation.x = -bendAngle;
-                        if (game.cachedBones.RightLowerLeg) game.cachedBones.RightLowerLeg.rotation.x = bendAngle * 2.0;
-                    } else {
-                        game.cachedBones.LeftUpperLeg.rotation.x = 0;
-                        if (game.cachedBones.LeftLowerLeg) game.cachedBones.LeftLowerLeg.rotation.x = 0;
-                        game.cachedBones.RightUpperLeg.rotation.x = 0;
-                        if (game.cachedBones.RightLowerLeg) game.cachedBones.RightLowerLeg.rotation.x = 0;
+                    // 右腿
+                    if (rHipW && rKneeW && rAnkleW && rKneeW.visibility > visThresh) {
+                        var hipVR = new THREE.Vector3(rHipW.x, rHipW.y, -rHipW.z);
+                        var kneeVR = new THREE.Vector3(rKneeW.x, rKneeW.y, -rKneeW.z);
+                        var ankleVR = new THREE.Vector3(rAnkleW.x, rAnkleW.y, -rAnkleW.z);
+                        var upperDirR = new THREE.Vector3().subVectors(kneeVR, hipVR).normalize();
+                        var targetQuatUR = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), upperDirR);
+                        game.cachedBones.RightUpperLeg.quaternion.slerp(targetQuatUR, 0.3);
+                        if (game.cachedBones.RightLowerLeg) {
+                            var lowerDirR = new THREE.Vector3().subVectors(ankleVR, kneeVR).normalize();
+                            game.cachedBones.RightLowerLeg.rotation.x = upperDirR.angleTo(lowerDirR);
+                        }
                     }
                 }
 
