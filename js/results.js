@@ -52,7 +52,7 @@ function startGame(mode) {
     case 2: currentGame = new GalgameGame(); break;
   }
   currentGame.setup();
-  // 投篮游戏：绑定全局摄像头流到 PoseTracker
+  // 投篮游戏：PoseTracker 自行订阅 MediaPipeManager
   if (mode === 1 && currentGame.poseTracker) {
     currentGame.poseTracker.setupPoseDetection(currentGame);
   }

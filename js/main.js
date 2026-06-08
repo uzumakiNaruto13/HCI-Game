@@ -255,71 +255,117 @@ function initSystem() {
     window.addEventListener('mouseup', function () { isDragging = false; isResizing = false; });
   })();
 
-  // === 全局摄像头 + MediaPipe：大厅加载时启动 ===
-  (function startGlobalCamera() {
-    var videoEl = document.getElementById('cam-video');
-    if (!videoEl) { console.warn('[Camera] #cam-video 不存在'); return; }
+  // === 大厅手势：手部上下划切换游戏 + 点头确认进入 ===
+  if (window.mpManager) {
+    var gestureCooldown = 0, prevWristY = null, wristMoveAccum = 0;
+    var nodState = 0, nodCount = 0, nodTimer = 0; // 0=等待下, 1=等待上
 
-    console.log('[Camera] 大厅加载，启动全局摄像头 + MediaPipe...');
-    navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, frameRate: 30 } })
-      .then(function (stream) {
-        videoEl.srcObject = stream;
-        videoEl.play().then(function () {
-          console.log('[Camera] ✅ 全局摄像头已启动');
-          window._globalCameraStream = stream;
-          window._globalPoseData = null;
-
-          // 初始化全局 MediaPipe Pose
-          if (typeof Pose === 'undefined') { console.warn('[Camera] MediaPipe Pose 未加载'); return; }
-          var pose = new Pose({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/' + f; } });
-          pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-          pose.onResults(function (results) {
-            if (results.poseLandmarks) {
-              window._globalPoseData = results.poseLandmarks;
-              window._globalPoseWorld = results.poseWorldLandmarks;
-            }
-          });
-
-          // 帧循环
-          var processFrame = function () {
-            if (videoEl.readyState >= 2) pose.send({ image: videoEl });
-            if (videoEl.requestVideoFrameCallback) videoEl.requestVideoFrameCallback(processFrame);
-            else setTimeout(processFrame, 1000 / 30);
-          };
-          if (videoEl.requestVideoFrameCallback) videoEl.requestVideoFrameCallback(processFrame);
-          else processFrame();
-          console.log('[Camera] ✅ 全局 MediaPipe 已启动');
-        });
-      })
-      .catch(function (err) { console.warn('[Camera] 摄像头不可用:', err.message); });
-  })();
-
-  // === 大厅手势：手臂摆动切换游戏 ===
-  (function setupLobbyGesture() {
-    var lastWristX = null, gestureCooldown = 0;
-    setInterval(function () {
+    window.mpManager.subscribe(function (results) {
       var isLobby = document.getElementById('screen-lobby').classList.contains('show');
-      if (!isLobby || !window._globalPoseData) return;
-      if (gestureCooldown > 0) { gestureCooldown--; return; }
+      if (!isLobby) { prevWristY = null; wristMoveAccum = 0; nodCount = 0; return; }
 
-      var lm = window._globalPoseData;
-      var lWrist = lm[15], rWrist = lm[16], lShoulder = lm[11], rShoulder = lm[12];
-      if (!lWrist || !rWrist || !lShoulder || !rShoulder) return;
+      var lm = results.poseLandmarks;
+      if (!lm) return;
 
-      // 右手超过左肩 = 向右划 → 下一个游戏
-      if (rWrist.x < lShoulder.x && Math.abs(rWrist.y - rShoulder.y) < 0.15) {
-        STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
-        updateLobbyUI(STATE.gameMode);
-        gestureCooldown = 30;
+      // ---- 全新滑动检测：独立双臂追踪 + 阻尼衰减机制 ----
+      var lWrist = lm[15], rWrist = lm[16];
+
+      if (typeof window.swipeState === 'undefined') {
+        window.swipeState = { prevL: null, prevR: null, accumL: 0, accumR: 0 };
       }
-      // 左手超过右肩 = 向左划 → 上一个游戏
-      if (lWrist.x > rShoulder.x && Math.abs(lWrist.y - lShoulder.y) < 0.15) {
-        STATE.gameMode = Math.max(0, STATE.gameMode - 1);
-        updateLobbyUI(STATE.gameMode);
-        gestureCooldown = 30;
+      var s = window.swipeState;
+
+      if (gestureCooldown > 0) {
+        gestureCooldown--;
+        s.accumL = 0; s.accumR = 0;
+        s.prevL = lWrist ? lWrist.y : null;
+        s.prevR = rWrist ? rWrist.y : null;
+      } else {
+        // 左手独立
+        if (lWrist) {
+          if (s.prevL !== null) {
+            var dyL = lWrist.y - s.prevL;
+            if (Math.abs(dyL) > 0.005) s.accumL += dyL;
+          }
+          s.prevL = lWrist.y;
+        } else { s.accumL = 0; s.prevL = null; }
+
+        // 右手独立
+        if (rWrist) {
+          if (s.prevR !== null) {
+            var dyR = rWrist.y - s.prevR;
+            if (Math.abs(dyR) > 0.005) s.accumR += dyR;
+          }
+          s.prevR = rWrist.y;
+        } else { s.accumR = 0; s.prevR = null; }
+
+        // 阻尼衰减：每帧衰减 15%
+        s.accumL *= 0.85;
+        s.accumR *= 0.85;
+
+        var triggered = 0;
+        var swipeThreshold = 0.08;
+        if (s.accumL > swipeThreshold || s.accumR > swipeThreshold) triggered = 1;
+        if (s.accumL < -swipeThreshold || s.accumR < -swipeThreshold) triggered = -1;
+
+        if (triggered === 1) {
+          STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
+          updateLobbyUI(STATE.gameMode);
+          gestureCooldown = 25;
+          console.log('[手势] 往下滑动：切换到下一个游戏');
+        } else if (triggered === -1) {
+          STATE.gameMode = Math.max(0, STATE.gameMode - 1);
+          updateLobbyUI(STATE.gameMode);
+          gestureCooldown = 25;
+          console.log('[手势] 往上滑动：切换到上一个游戏');
+        }
       }
-    }, 200); // 每 200ms 检测一次
-  })();
+
+      // ---- 全新点头检测：基于相对位移的波峰波谷检测 ----
+      var nose = lm[0]; // 鼻尖
+      if (nose) {
+        if (typeof window.prevNoseY === 'undefined') window.prevNoseY = nose.y;
+        if (typeof window.nodAccumY === 'undefined') window.nodAccumY = 0;
+
+        var deltaY = nose.y - window.prevNoseY;
+        window.prevNoseY = nose.y;
+
+        // 只有移动速度较快时才计入累积（过滤身体自然晃动）
+        if (Math.abs(deltaY) > 0.005) {
+          window.nodAccumY += deltaY;
+        }
+
+        if (nodTimer > 0) nodTimer--;
+
+        // 状态 0→1：鼻子快速向下位移超过 0.04（约画面高度 4%）
+        if (nodState === 0 && window.nodAccumY > 0.04) {
+          nodState = 1;
+          window.nodAccumY = 0;
+        }
+        // 状态 1→0：鼻子快速向上抬起超过 -0.04
+        else if (nodState === 1 && window.nodAccumY < -0.04) {
+          nodState = 0;
+          nodCount++;
+          nodTimer = 60;
+          window.nodAccumY = 0;
+          console.log('[手势] 成功检测到 1 次点头！目前总计: ' + nodCount);
+        }
+
+        // 超时重置
+        if (nodTimer <= 0 && nodCount > 0) { nodCount = 0; console.log('[手势] 点头超时，已重置'); }
+
+        // 缓慢低头等误差清理
+        if (Math.abs(window.nodAccumY) > 0.15) { window.nodAccumY = 0; }
+
+        // 2 次点头触发
+        if (nodCount >= 2) {
+          console.log('[手势] 达成 2 次点头，进入游戏！');
+          nodCount = 0; nodState = 0; window.nodAccumY = 0;
+          startGame(STATE.gameMode);
+        }
+      }
+    });
+  }
 
   // 初始状态
   updateLobbyUI(STATE.gameMode);

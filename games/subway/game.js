@@ -35,7 +35,6 @@ SubwaySurfGame.prototype.setup = function () {
   this.invincibleTimer = 0;
   this.hitFlash = 0;
   this._shiftHeld = false;
-  this._poseJumpLock = false;
   this.sprintCooldown = 0;
   this.freezeTimer = 0;
   this.hpMax = 7;
@@ -134,6 +133,32 @@ SubwaySurfGame.prototype.setup = function () {
   };
   window.addEventListener('keydown', this._keyHandler);
   window.addEventListener('keyup', this._keyUpHandler);
+
+  // 体感跳跃：订阅 MediaPipeManager，躯干上移 → 触发跳跃
+  var self = this;
+  this._poseJumpAccum = 0;
+  this._posePrevHipY = null;
+  this._poseJumpHandler = function (results) {
+    if (!self._running || self.isJumping) return;
+    var lm = results.poseLandmarks;
+    var lHip = lm[23], rHip = lm[24];
+    if (!lHip || !rHip) { self._posePrevHipY = null; self._poseJumpAccum = 0; return; }
+    var hipY = (lHip.y + rHip.y) / 2;
+    if (self._posePrevHipY !== null) {
+      var delta = self._posePrevHipY - hipY; // 正值 = 向上移动
+      if (Math.abs(delta) > 0.003) self._poseJumpAccum += delta;
+      if (self._poseJumpAccum < 0) self._poseJumpAccum = 0; // 只累积向上
+      if (self._poseJumpAccum > 0.025) {
+        self.isJumping = true;
+        self.isSliding = false;
+        self.playerVY = -18 * self.speed;
+        self._poseJumpAccum = 0;
+      }
+      if (Math.abs(self._poseJumpAccum) > 0.1) self._poseJumpAccum = 0; // 误差清理
+    }
+    self._posePrevHipY = hipY;
+  };
+  if (window.mpManager) window.mpManager.subscribe(this._poseJumpHandler);
 
   // 开场动画序列
   this._startIntroSequence();
@@ -292,25 +317,6 @@ SubwaySurfGame.prototype.update = function () {
 
   var groundY = H / 2 + 30;
   if (this.playerY === 0 && !this.isJumping) this.playerY = groundY;
-
-  // 体感跳跃：MediaPipe 腿部检测 → 自动跳跃
-  if (!this.isJumping && !this.isSliding && window._globalPoseData) {
-    var lm = window._globalPoseData;
-    var lAnkle = lm[27], rAnkle = lm[28], lHip2 = lm[23], rHip2 = lm[24];
-    if (lAnkle && rAnkle && lHip2 && rHip2) {
-      var ankleY = (lAnkle.y + rAnkle.y) / 2;
-      var hipY2 = (lHip2.y + rHip2.y) / 2;
-      // 脚踝高于髋部 → 跳跃中
-      if (ankleY > hipY2 + 0.04 && !this._poseJumpLock) {
-        this.isJumping = true;
-        this.isSliding = false;
-        this.playerVY = -18 * this.speed;
-        this._poseJumpLock = true;
-        this.emitParticles(W / 2, this.playerY - 20, 'rgba(0,212,255,', 8);
-      }
-      if (ankleY <= hipY2 + 0.01) this._poseJumpLock = false; // 落地后解锁
-    }
-  }
 
   if (this.isJumping) {
     this.playerVY += 0.65 * this.speed;
@@ -870,6 +876,7 @@ SubwaySurfGame.prototype.render = function () {
 
 SubwaySurfGame.prototype.endGame = function () {
   this._running = false;
+  if (this._poseJumpHandler && window.mpManager) window.mpManager.unsubscribe(this._poseJumpHandler);
   if (this._bgm) { this._bgm.pause(); this._bgm = null; }
   if (this._animFrameId) { cancelAnimationFrame(this._animFrameId); this._animFrameId = null; }
   if (this._keyHandler) window.removeEventListener('keydown', this._keyHandler);

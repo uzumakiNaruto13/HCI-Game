@@ -122,6 +122,40 @@ GameEngine.prototype.showReadyScreen = function (onReady) {
   };
   window.addEventListener('keydown', keyHandler);
   this._readyKeyHandler = keyHandler;
+
+  // 体感点头确认：2 次点头 → 进入游戏
+  var nodCount = 0, nodState = 0, nodTimer = 0;
+  var prevNoseY, nodAccumY = 0;
+  var nodHandler = function (results) {
+    if (!self._readyActive) return;
+    var lm = results.poseLandmarks;
+    var nose = lm ? lm[0] : null;
+    if (!nose) return;
+    if (typeof prevNoseY === 'undefined') prevNoseY = nose.y;
+
+    var deltaY = nose.y - prevNoseY;
+    prevNoseY = nose.y;
+    if (Math.abs(deltaY) > 0.005) nodAccumY += deltaY;
+    if (nodTimer > 0) nodTimer--;
+
+    if (nodState === 0 && nodAccumY > 0.04) { nodState = 1; nodAccumY = 0; }
+    else if (nodState === 1 && nodAccumY < -0.04) { nodState = 0; nodCount++; nodTimer = 60; nodAccumY = 0; }
+    if (nodTimer <= 0 && nodCount > 0) nodCount = 0;
+    if (Math.abs(nodAccumY) > 0.15) nodAccumY = 0;
+
+    if (nodCount >= 2) {
+      nodCount = 0; nodState = 0; nodAccumY = 0;
+      doStart();
+    }
+  };
+  if (window.mpManager) window.mpManager.subscribe(nodHandler);
+
+  // 清理函数注入 doStart
+  var origDoStart = doStart;
+  doStart = function (e) {
+    if (window.mpManager) window.mpManager.unsubscribe(nodHandler);
+    origDoStart(e);
+  };
 };
 
 GameEngine.prototype.isReadyPhase = function () {

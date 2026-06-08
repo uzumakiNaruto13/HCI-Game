@@ -291,7 +291,7 @@ KobeShootingGame.prototype._syncHUD = function () {
 // ====================================================================
 KobeShootingGame.prototype.endGame = function () {
   if (this._animFrameId) { cancelAnimationFrame(this._animFrameId); this._animFrameId = null; }
-  // 不关闭全局摄像头流（由大厅管理生命周期）
+  if (this.poseTracker) this.poseTracker.dispose(); // 退订 MediaPipeManager
   if (this._keydownHandler) { window.removeEventListener('keydown', this._keydownHandler); this._keydownHandler = null; }
   if (this._keyupHandler) { window.removeEventListener('keyup', this._keyupHandler); this._keyupHandler = null; }
   GameEngine.prototype.endGame.call(this);

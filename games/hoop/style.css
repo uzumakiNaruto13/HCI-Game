@@ -344,6 +344,7 @@
   bottom: 20px;
   right: 20px;
   width: 320px;
+  height: 260px;
   min-width: 160px;
   min-height: 140px;
   max-width: 800px;
@@ -357,6 +358,8 @@
   border-radius: 8px;
   overflow: hidden;
 }
+
+#cam-preview-hud.hidden { display: none !important; }
 
 .cam-header {
   background: #1A1A2E;
@@ -406,18 +409,25 @@
   width: 100%;
   flex: 1;
   overflow: hidden;
-  background: #050505;
+  background: transparent;
   min-height: 80px;
 }
 
-#cam-video, #cam-canvas {
+#cam-video {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
+}
+
+#cam-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
 }
 
 #cam-canvas {
