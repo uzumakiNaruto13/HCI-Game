@@ -239,6 +239,18 @@ KobeShootingGame.prototype._update3D = function () {
   }
 
   this.tick();
+
+  // 蓄力安全锁：手上没球 → 强制清除蓄力 + 慢动作 + UI
+  if (this.isCharging && !this.ballAttached) {
+    this.isCharging = false;
+    this.displayProgress = 0;
+    this.slowMotionTimer = 0;
+    var cc = document.getElementById('charge-bar-container');
+    var cr = document.getElementById('charge-recommend');
+    if (cc) { cc.style.boxShadow = 'none'; cc.style.borderColor = '#E0E0E0'; }
+    if (cr) { cr.style.width = '4px'; cr.style.background = '#FFD700'; }
+  }
+
   if (this.freezeTimer > 0) { this.freezeTimer -= delta; delta = 0; }
   if (this.sprintCooldown > 0) this.sprintCooldown -= delta;
   if (this.sprintTimer > 0) { this.sprintTimer -= delta; if (this.sprintTimer <= 0) { this.isSprinting = false; if (this.rgbShiftPass) this.rgbShiftPass.uniforms['amount'].value = 0.0; } }

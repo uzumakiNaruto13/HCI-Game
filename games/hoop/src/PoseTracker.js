@@ -91,7 +91,10 @@ export class PoseTracker {
                     const rot = (vrmName === 'Hips') ? posePart.rotation : posePart;
                     if (!rot || typeof rot.x !== 'number') continue;
                     if (vrmName === 'Hips') continue;
-                    // 数据已在 MediaPipeManager 源头翻转 X 轴，此处直接使用
+                    // 拦截腿部：不直接映射 Kalidokit 旋转，交给 IK 解算
+                    const isLegBone = vrmName.toLowerCase().includes('leg');
+                    if (isLegBone) continue;
+
                     const kalidoQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(rot.x, -rot.y, -rot.z, 'XYZ'));
                     const targetQuat = game.initialQuats[vrmName].clone().multiply(kalidoQuat);
                     // 脊椎权重分配：多节脊柱共同承担躯干旋转
@@ -102,6 +105,49 @@ export class PoseTracker {
                     bone.quaternion.slerp(targetQuat, weight);
                 }
                 if (game.cachedBones.Hips && game.initialHipsPos) game.cachedBones.Hips.position.copy(game.initialHipsPos);
+
+                // ---- 脚部锁定 + IK 膝盖折叠 ----
+                if (game.cachedBones.LeftUpperLeg && game.cachedBones.RightUpperLeg) {
+                    if (!game._footLock) game._footLock = { isLocked: false, lx: 0, lz: 0, rx: 0, rz: 0 };
+                    var isWalking = game._walkState && game._walkState.activeTimer > 0;
+
+                    if (!isWalking) {
+                        if (!game._footLock.isLocked) {
+                            game._footLock.lx = game.playerModel.position.x - 0.2;
+                            game._footLock.lz = game.playerModel.position.z;
+                            game._footLock.rx = game.playerModel.position.x + 0.2;
+                            game._footLock.rz = game.playerModel.position.z;
+                            game._footLock.isLocked = true;
+                        }
+                        var tcX = (game._footLock.lx + game._footLock.rx) / 2;
+                        var tcZ = (game._footLock.lz + game._footLock.rz) / 2;
+                        game.playerModel.position.x += (tcX - game.playerModel.position.x) * 0.2;
+                        game.playerModel.position.z += (tcZ - game.playerModel.position.z) * 0.2;
+                    } else {
+                        game._footLock.isLocked = false;
+                    }
+
+                    // IK 膝盖折叠：骨盆世界高度 → 自动弯膝
+                    var hipWorldPos = new THREE.Vector3();
+                    game.cachedBones.Hips.getWorldPosition(hipWorldPos);
+                    var hipHeight = hipWorldPos.y;
+                    var straightLegLen = game.modelHalfHeight * 0.9;
+                    var compression = straightLegLen - hipHeight;
+                    if (compression > 0) {
+                        var ratio = compression / straightLegLen;
+                        ratio = Math.max(-0.99, Math.min(0.99, ratio)); // 防 NaN 安全锁
+                        var bendAngle = Math.asin(ratio);
+                        game.cachedBones.LeftUpperLeg.rotation.x = -bendAngle;
+                        if (game.cachedBones.LeftLowerLeg) game.cachedBones.LeftLowerLeg.rotation.x = bendAngle * 2.0;
+                        game.cachedBones.RightUpperLeg.rotation.x = -bendAngle;
+                        if (game.cachedBones.RightLowerLeg) game.cachedBones.RightLowerLeg.rotation.x = bendAngle * 2.0;
+                    } else {
+                        game.cachedBones.LeftUpperLeg.rotation.x = 0;
+                        if (game.cachedBones.LeftLowerLeg) game.cachedBones.LeftLowerLeg.rotation.x = 0;
+                        game.cachedBones.RightUpperLeg.rotation.x = 0;
+                        if (game.cachedBones.RightLowerLeg) game.cachedBones.RightLowerLeg.rotation.x = 0;
+                    }
+                }
 
                 // 弯腰拾球
                 if (game.lastPoseData && game.basketballBody && game.basketball && game.basketball.visible) {
@@ -183,6 +229,35 @@ export class PoseTracker {
                             game._squatLockTimer = 60;
                             game._squatBaseline = game._smoothHipY;
                         }
+                    }
+                }
+
+                // 暴露手部位置 + 头部 Enter 信号（供菜单/选择框联动）
+                if (game.lastPoseData) {
+                    var hlm = game.lastPoseData;
+                    var lWristH = hlm[15], rWristH = hlm[16];
+                    // 优先活跃手
+                    if (rWristH && rWristH.visibility > 0.5) {
+                        game.handSelectorPos = { x: rWristH.x, y: rWristH.y };
+                    } else if (lWristH && lWristH.visibility > 0.5) {
+                        game.handSelectorPos = { x: lWristH.x, y: lWristH.y };
+                    } else {
+                        game.handSelectorPos = null;
+                    }
+
+                    // 头部点头 → Enter 脉冲
+                    var noseH = hlm[0];
+                    if (noseH && noseH.visibility > 0.5) {
+                        if (!game._headEnterState) game._headEnterState = { prevY: noseH.y, triggered: false };
+                        var hes = game._headEnterState;
+                        var headVel = noseH.y - hes.prevY;
+                        if (headVel > 0.015 && !hes.triggered) {
+                            game.headEnterSignal = true;
+                            hes.triggered = true;
+                        } else if (headVel < 0.005) {
+                            hes.triggered = false;
+                        }
+                        hes.prevY = noseH.y;
                     }
                 }
             }

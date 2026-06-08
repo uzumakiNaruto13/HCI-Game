@@ -25,6 +25,54 @@ GalgameGame.prototype.setup = function () {
   this.started = false;
 
   this.startIntro();
+
+  // 体感手势翻页：左/下=下一页，右/上=上一页
+  var self = this;
+  this._galGestureState = { prevLX: null, prevLY: null, prevRX: null, prevRY: null, accumLX: 0, accumLY: 0, accumRX: 0, accumRY: 0, cooldown: 0 };
+  this._galGestureHandler = function (results) {
+    var s = self._galGestureState;
+    if (s.cooldown > 0) { s.cooldown--; return; }
+    var lm = results.poseLandmarks;
+    var lw = lm[15], rw = lm[16];
+    var triggered = 0;
+
+    [['L', lw, 'prevLX', 'accumLX'], ['R', rw, 'prevRX', 'accumRX']].forEach(function (cfg) {
+      var wrist = cfg[1];
+      if (!wrist || wrist.visibility < 0.5) return;
+      var pxKey = cfg[2], pyKey = cfg[3].replace('X', 'Y'), axKey = cfg[3], ayKey = cfg[3].replace('X', 'Y');
+      if (s[pxKey] !== null) {
+        var dx = wrist.x - s[pxKey], dy = wrist.y - (s[pyKey] || wrist.y);
+        if (Math.abs(dx) > 0.003) s[axKey] += dx;
+        if (Math.abs(dy) > 0.003) s[ayKey] = (s[ayKey] || 0) + dy;
+      }
+      s[pxKey] = wrist.x; s[pyKey] = wrist.y;
+      // 阻尼衰减
+      s[axKey] *= 0.85; s[ayKey] = (s[ayKey] || 0) * 0.85;
+
+      // 左(< -0.06) 或 下(> 0.06) → 下一页
+      if (s[axKey] < -0.06 || (s[ayKey] || 0) > 0.06) triggered = 1;
+      // 右(> 0.06) 或 上(< -0.06) → 上一页
+      if (s[axKey] > 0.06 || (s[ayKey] || 0) < -0.06) triggered = -1;
+    });
+
+    if (triggered === 1) {
+      // 下一页：模拟空格
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
+      s.cooldown = 20;
+      // 清零累积
+      s.accumLX = s.accumRX = s.accumLY = s.accumRY = 0;
+    } else if (triggered === -1) {
+      // 上一页：模拟滚轮上滚
+      var iframe = document.querySelector('#renpy-container iframe') || document.querySelector('#renpy-container');
+      if (iframe) {
+        iframe.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, bubbles: true }));
+      }
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp', key: 'ArrowUp', bubbles: true }));
+      s.cooldown = 20;
+      s.accumLX = s.accumRX = s.accumLY = s.accumRY = 0;
+    }
+  };
+  if (window.mpManager) window.mpManager.subscribe(this._galGestureHandler);
 };
 
 GalgameGame.prototype.startIntro = function () {
@@ -256,6 +304,7 @@ GalgameGame.prototype.launchGame = function () {
 
 GalgameGame.prototype.endGame = function () {
   window._gameLoop2 = false;
+  if (this._galGestureHandler && window.mpManager) window.mpManager.unsubscribe(this._galGestureHandler);
 
   var canvas = this.canvas || document.getElementById('gameCanvas2');
   if (canvas) {

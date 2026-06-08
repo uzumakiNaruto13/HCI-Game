@@ -144,7 +144,7 @@ export class Player {
                 moveDir.addScaledVector(right, moveX / len);
                 game.playerBody.velocity.x = moveDir.x * game.moveSpeed;
                 game.playerBody.velocity.z = moveDir.z * game.moveSpeed;
-            } else { game.playerBody.velocity.x = 0; game.playerBody.velocity.z = 0; }
+            } else { game.playerBody.velocity.x *= 0.85; game.playerBody.velocity.z *= 0.85; }
         }
         game.playerBody.velocity.y = game.isJumping ? game.verticalVelocity : -0.01;
     }
