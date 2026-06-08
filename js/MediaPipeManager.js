@@ -219,6 +219,14 @@ class MediaPipeManager {
         var self = this;
         this.pose.onResults((results) => {
             if (!results.poseLandmarks) return;
+
+            // 核心修正：X 轴去镜像（Selfie Mode 反转）
+            // MediaPipe 输出 0.0=画面最左, 1.0=画面最右
+            // 前置摄像头是镜像的，必须翻转 X 才能让左右手和骨骼方向正确
+            for (let i = 0; i < results.poseLandmarks.length; i++) {
+                results.poseLandmarks[i].x = 1.0 - results.poseLandmarks[i].x;
+            }
+
             self._lastPoseLandmarks = results.poseLandmarks;
             // 本地摄像头模式：更新 canvas
             if (!self._ipPolling) self._refreshPanel();

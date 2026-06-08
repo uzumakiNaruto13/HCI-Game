@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="games/subway/style.css">
 <link rel="stylesheet" href="games/hoop/style.css">
 <link rel="stylesheet" href="games/galgame/style.css">
+<link rel="stylesheet" href="games/tetris/style.css">
 <!-- Three.js + Cannon-es import map (供投篮游戏模块使用) -->
 <script type="importmap">
 {
@@ -24,6 +25,7 @@
 <!-- MediaPipe + Kalidokit 体感追踪 -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/kalidokit/dist/kalidokit.umd.js"></script>
 </head>
 <body>
@@ -116,6 +118,19 @@
           </div>
           <div class="gsc-bar gsc-bar-pink"></div>
         </div>
+        <div class="gsc" data-game="3" id="gsc3">
+          <div class="gsc-inner">
+            <span class="gsc-icon">🧩</span>
+            <div class="gsc-info">
+              <span class="gsc-name">体感方块</span>
+              <span class="gsc-sub">手势控制 · 旋转 · 移动 · 下落</span>
+            </div>
+            <div class="gsc-diff">
+              <span class="diff-star">★★</span><span class="diff-star dim">★</span>
+            </div>
+          </div>
+          <div class="gsc-bar gsc-bar-green"></div>
+        </div>
       </div>
 
       <!-- 操作提示 & 统计预览 -->
@@ -154,6 +169,11 @@
       <span class="bn-dot bn-dot-pink"></span>
       <span class="bn-icon">🎮</span>
       <span class="bn-label">Galgame</span>
+    </div>
+    <div class="bn-item" data-nav="3" id="bn3">
+      <span class="bn-dot bn-dot-green"></span>
+      <span class="bn-icon">🧩</span>
+      <span class="bn-label">方块</span>
     </div>
   </nav>
 
@@ -338,6 +358,73 @@
 </div>
 
 <!-- ============================================================ -->
+<!-- 体感方块游戏 (俄罗斯方块) -->
+<!-- ============================================================ -->
+<div id="screen-game-tetris" class="screen" style="padding:0">
+  <div class="game-area">
+    <canvas id="gameCanvas3"></canvas>
+
+    <div class="action-guide" id="actionGuide3">
+      <div class="action-guide-title">🎮 手势操作 · 体感方块</div>
+      <div class="action-guide-item"><span class="ag-key">举起左臂</span><span class="ag-arrow">→</span><span class="ag-effect">方块左移</span></div>
+      <div class="action-guide-item"><span class="ag-key">举起右臂</span><span class="ag-arrow">→</span><span class="ag-effect">方块右移</span></div>
+      <div class="action-guide-item"><span class="ag-key">双臂交叉</span><span class="ag-arrow">→</span><span class="ag-effect">旋转方块</span></div>
+      <div class="action-guide-item"><span class="ag-key">点头</span><span class="ag-arrow">→</span><span class="ag-effect">加速下落</span></div>
+      <div class="action-guide-item ag-hint">键盘备用: ← → ↑ ↓ 空格</div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hp-row">
+          <span class="hud-label">HP</span>
+          <div class="hp-bar"><div class="hp-fill" id="hp3" style="width:100%"></div></div>
+          <span class="hp-text" id="hpText3">100%</span>
+        </div>
+        <div>
+          <span class="hud-label">得分</span>
+          <span class="hud-value" id="score3">0</span>
+        </div>
+        <div>
+          <span class="hud-label">消行</span>
+          <span class="hud-value" id="lines3">0</span>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div class="action-hint" id="hint3">🧩 体感方块 · 手势控制</div>
+        <div class="countdown" id="timer3">120</div>
+      </div>
+      <div class="hud-right">
+        <div>
+          <span class="hud-label">等级</span>
+          <span class="hud-value" id="level3">1</span>
+        </div>
+        <div>
+          <span class="hud-label">🔥 消耗</span>
+          <span class="hud-value" id="cal3">0</span>
+          <span style="font-size:.65rem;color:#8888bb"> kcal</span>
+        </div>
+      </div>
+    </div>
+    <div class="feedback" id="fb3"></div>
+
+    <!-- 飞吻动画覆盖层 -->
+    <div id="kiss-overlay">
+      <div id="kiss-container">
+        <img id="kiss-character" src="games/tetris/character.png" alt="character" />
+        <img id="kiss-effect" src="games/tetris/kiss-effect.gif" alt="kiss" />
+        <div id="kiss-text">🐱 胖猫感谢你的麦当劳 🍔</div>
+      </div>
+    </div>
+
+    <div class="rules-bar" id="rules3">
+      <div class="title">🎮 体感方块 · 手势控制</div>
+      <div class="text">举起左臂=左移 · 举起右臂=右移 · 双臂交叉=旋转 · 点头=加速下落 · ESC=暂停</div>
+    </div>
+    <button class="bt-quit" id="quitBtn3">✕ 退出</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- 结算页面 -->
 <!-- ============================================================ -->
 <div id="screen-results" class="screen">
@@ -433,6 +520,7 @@
 <script src="games/subway/game.js"></script>
 <script type="module" src="games/hoop/game.js"></script>
 <script src="games/galgame/renpy-launcher.js"></script>
+<script src="games/tetris/game.js"></script>
 
 <script src="js/results.js"></script>
 <script src="js/main.js"></script>

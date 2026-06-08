@@ -45,6 +45,20 @@ var GAME_META = [
       { key: '按键 1/2/3', action: '选择选项' },
       { key: 'Tab', action: '快进对话' }
     ]
+  },
+  {
+    id: 3,
+    name: '体感方块',
+    icon: '🧩',
+    desc: '体感操控 · 经典方块 · 消行挑战',
+    tags: ['🧩 方块', '🎮 体感', '⚡ 限时'],
+    color: 'green',
+    heroGlowColor: 'rgba(34, 197, 94, 0.5)',
+    keys: [
+      { key: '举起左臂', action: '方块左移' },
+      { key: '举起右臂', action: '方块右移' },
+      { key: '双臂交叉', action: '旋转方块' }
+    ]
   }
 ];
 
@@ -132,9 +146,11 @@ function initSystem() {
   var quitBtn0 = document.getElementById('quitBtn0');
   var quitBtn1 = document.getElementById('quitBtn1');
   var quitBtn2 = document.getElementById('quitBtn2');
+  var quitBtn3 = document.getElementById('quitBtn3');
   if (quitBtn0) quitBtn0.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
   if (quitBtn1) quitBtn1.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
   if (quitBtn2) quitBtn2.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
+  if (quitBtn3) quitBtn3.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
 
   // === 结算页面按钮 ===
   var btnRetry = document.getElementById('btnRetry');
@@ -168,12 +184,19 @@ function initSystem() {
           // 恢复游戏
           currentGame._paused = false;
           if (guide) guide.classList.add('hidden');
+          // 重新启动倒计时
+          currentGame.beginCountdown();
           currentGame.startLoop();
         } else if (currentGame._running) {
           // 暂停游戏
           currentGame._paused = true;
           currentGame._running = false;
           if (guide) guide.classList.remove('hidden');
+          // 清除倒计时
+          if (STATE.gameTimer) {
+            clearInterval(STATE.gameTimer);
+            STATE.gameTimer = null;
+          }
           if (currentGame._animFrameId) {
             cancelAnimationFrame(currentGame._animFrameId);
             currentGame._animFrameId = null;
@@ -185,7 +208,7 @@ function initSystem() {
 
   // === 窗口大小调整 ===
   window.addEventListener('resize', function () {
-    [0, 1, 2].forEach(function (i) {
+    [0, 1, 2, 3].forEach(function (i) {
       var c = document.getElementById('gameCanvas' + i);
       if (c) { c.width = window.innerWidth; c.height = window.innerHeight; }
     });
