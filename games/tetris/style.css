@@ -1,0 +1,184 @@
+/* ====================================================================
+   games/tetris/style.css — 体感方块专属样式
+   ==================================================================== */
+
+/* 方块颜色主题 */
+.tetris-cell-I { background: #00f0f0; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-O { background: #f0f000; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-T { background: #a000f0; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-S { background: #00f000; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-Z { background: #f00000; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-J { background: #0000f0; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+.tetris-cell-L { background: #f0a000; box-shadow: inset 0 0 4px rgba(255,255,255,0.3); }
+
+/* 下一个方块预览区 */
+.tetris-next-preview {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  background: rgba(10, 5, 30, 0.85);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  backdrop-filter: blur(8px);
+  z-index: 25;
+  pointer-events: none;
+}
+
+.tetris-next-preview .preview-title {
+  color: #a855f7;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.tetris-next-preview canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+/* 手势提示面板 */
+.tetris-gesture-panel {
+  position: absolute;
+  bottom: 120px;
+  left: 20px;
+  background: rgba(10, 5, 30, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  backdrop-filter: blur(8px);
+  z-index: 25;
+  pointer-events: none;
+  font-size: 0.7rem;
+  color: #8888bb;
+  line-height: 1.8;
+}
+
+.tetris-gesture-panel .gesture-title {
+  color: #00d4ff;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.tetris-gesture-panel .gesture-active {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+/* 消行特效 */
+@keyframes tetrisLineClear {
+  0% { opacity: 1; transform: scaleX(1); }
+  50% { opacity: 0.8; transform: scaleX(1.1); background: #fff; }
+  100% { opacity: 0; transform: scaleX(0); }
+}
+
+.tetris-line-clear-effect {
+  animation: tetrisLineClear 0.3s ease-out;
+}
+
+/* 游戏结束遮罩 */
+.tetris-gameover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.tetris-gameover-overlay .gameover-text {
+  font-size: 2.5rem;
+  color: #ff4444;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+  margin-bottom: 20px;
+}
+
+.tetris-gameover-overlay .gameover-score {
+  font-size: 1.5rem;
+  color: #ffd700;
+  margin-bottom: 30px;
+}
+
+/* 网格背景闪烁 */
+@keyframes tetrisGridPulse {
+  0% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+  100% { opacity: 0.03; }
+}
+
+/* 飞吻动画覆盖层 */
+#kiss-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+#kiss-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#kiss-character {
+  width: 800px;
+  height: auto;
+  transform: scale(0.1);
+  transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 0 30px rgba(255, 100, 200, 0.7));
+}
+
+#kiss-character.zoom-in {
+  transform: scale(1);
+}
+
+#kiss-effect {
+  position: absolute;
+  right: -220px;
+  top: 35%;
+  transform: translateY(-50%);
+  width: 200px;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+  filter: drop-shadow(0 0 15px rgba(255, 50, 150, 0.8));
+}
+
+#kiss-effect.show {
+  opacity: 1;
+}
+
+/* 飞吻文字效果 */
+#kiss-text {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3.5rem;
+  color: #ff69b4;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+  opacity: 0;
+  transition: opacity 0.5s ease-in;
+  white-space: nowrap;
+}
+
+#kiss-text.show {
+  opacity: 1;
+}

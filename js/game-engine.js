@@ -99,7 +99,8 @@ GameEngine.prototype.showReadyScreen = function (onReady) {
     '<div class="ready-sub">查看左侧操作说明，然后点击下方按钮</div>' +
     '<button id="readyStartBtn' + this.mode + '" class="bt bt-success" style="font-size:1.2rem;padding:0.8rem 3rem;">🎮 开始游戏</button>' +
     '</div>';
-  document.getElementById('screen-game-' + ['subway', 'hoop', 'galgame'][this.mode]).appendChild(overlay);
+  var screenNames = ['subway', 'hoop', 'galgame', 'tetris'];
+  document.getElementById('screen-game-' + screenNames[this.mode]).appendChild(overlay);
 
   var doStart = function (e) {
     if (!self._readyActive) return;

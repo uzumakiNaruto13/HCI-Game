@@ -93,6 +93,27 @@ class MediaPipeManager {
                 if (canvas.width !== vw) canvas.width = vw;
                 if (canvas.height !== vh) canvas.height = vh;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 绘制骨骼连接线
+                var connections = [
+                    [11,12], [11,13], [13,15], [12,14], [14,16], // 上半身
+                    [11,23], [12,24], [23,24], // 躯干
+                    [23,25], [25,27], [24,26], [26,28] // 下半身
+                ];
+                ctx.strokeStyle = '#00FFFF';
+                ctx.lineWidth = 2;
+                connections.forEach(function(conn) {
+                    var from = results.poseLandmarks[conn[0]];
+                    var to = results.poseLandmarks[conn[1]];
+                    if (from && to) {
+                        ctx.beginPath();
+                        ctx.moveTo(from.x * canvas.width, from.y * canvas.height);
+                        ctx.lineTo(to.x * canvas.width, to.y * canvas.height);
+                        ctx.stroke();
+                    }
+                });
+
+                // 绘制关键点
                 results.poseLandmarks.forEach(function (lm, i) {
                     var x = lm.x * canvas.width, y = lm.y * canvas.height;
                     var isLeg = i >= 23 && i <= 32, isHand = i >= 15 && i <= 22;
