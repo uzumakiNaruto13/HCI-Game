@@ -160,7 +160,7 @@ class MediaPipeManager {
         var landmarks = this._lastPoseLandmarks;
         if (landmarks) {
             landmarks.forEach(function (lm, i) {
-                var x = (1.0 - lm.x) * w, y = lm.y * h;
+                var x = lm.x * w, y = lm.y * h;
                 var isLeg = i >= 23 && i <= 32, isHand = i >= 15 && i <= 22;
                 ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
                 ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
@@ -212,7 +212,8 @@ class MediaPipeManager {
             smoothLandmarks: true,
             enableSegmentation: false,
             minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            minTrackingConfidence: 0.6,
+            selfieMode: true  // 前置自拍镜头，底层数据自动左右翻转
         });
 
           // 全局唯一的原生回调 — 广播给订阅者 + 刷新显示
