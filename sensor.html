@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>腿部追踪器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #111;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            padding-top: 40%;
+            height: 100vh;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #status { padding: 20px; }
+        #data { font-size: 0.9rem; color: #888; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div id="status">🦿 点击屏幕授权传感器</div>
+    <div id="data"></div>
+    <script>
+        var ws = null;
+        var connected = false;
+
+        // 连接电脑端 WebSocket 服务器
+        function connect() {
+            ws = new WebSocket('ws://10.160.211.244:8080');
+            ws.onopen = function () {
+                connected = true;
+                document.getElementById('status').innerText = '✅ 已连接！放入裤兜';
+            };
+            ws.onclose = function () {
+                connected = false;
+                document.getElementById('status').innerText = '❌ 断开，点击重连';
+            };
+            ws.onerror = function () {
+                document.getElementById('status').innerText = '⚠️ 连接失败，点击重试';
+            };
+        }
+
+        function startSensor() {
+            document.getElementById('status').innerText = '📡 数据发送中...';
+            window.addEventListener('deviceorientation', function (event) {
+                var beta = event.beta || 0;   // 前后倾 (-180~180)
+                var gamma = event.gamma || 0; // 左右倾 (-90~90)
+                var alpha = event.alpha || 0; // 旋转 (0~360)
+
+                document.getElementById('data').innerText =
+                    'β:' + beta.toFixed(1) + ' γ:' + gamma.toFixed(1);
+
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'leg_imu',
+                        beta: beta,
+                        gamma: gamma,
+                        alpha: alpha,
+                        ts: Date.now()
+                    }));
+                }
+            });
+        }
+
+        // 点击授权
+        document.body.addEventListener('click', function () {
+            if (!connected) { connect(); }
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(function (state) {
+                    if (state === 'granted') startSensor();
+                });
+            } else {
+                startSensor();
+            }
+        });
+
+        connect();
+    </script>
+</body>
+</html>

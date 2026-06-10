@@ -3,6 +3,20 @@
 // 整个应用只有一个 video + 一个 Pose 实例，各场景通过 subscribe 获取数据
 // ====================================================================
 
+// 手机陀螺仪 WebSocket 客户端
+window._phoneIMU = { beta: 0, gamma: 0, alpha: 0, ts: 0 };
+(function connectPhoneIMU() {
+    try {
+        var ws = new WebSocket('ws://' + window.location.hostname + ':8081');
+        ws.onmessage = function (e) {
+            var d = JSON.parse(e.data);
+            if (d.type === 'leg_imu') window._phoneIMU = d;
+        };
+        ws.onclose = function () { setTimeout(connectPhoneIMU, 3000); };
+        ws.onerror = function () {}; // 静默，手机没连也不报错
+    } catch (e) {}
+})();
+
 class MediaPipeManager {
     constructor() {
         // 处理用的隐藏 video（给 MediaPipe 喂帧）
@@ -35,7 +49,7 @@ class MediaPipeManager {
         }
 
         // === 主方案：外接 IP 摄像头 ===
-        var ipCamUrl = 'http://10.160.169.210:8080';
+        var ipCamUrl = 'http://10.160.79.92:8080';
         var ipSuccess = await this._tryIPCamera(ipCamUrl);
         if (ipSuccess) {
             console.log('[MediaPipeManager] ✅ 外接摄像头已连接');
@@ -142,11 +156,57 @@ class MediaPipeManager {
         var canvas = document.getElementById('cam-canvas');
         if (!canvas) return;
         var ctx = canvas.getContext('2d');
+
+        // 双机位模式：左侧本机 + 右侧 IP 摄像头拼盘
+        if (this._dualMode && this._ipSnapshotCanvas) {
+            var dw = 640, dh = 480;
+            canvas.width = dw * 2; canvas.height = dh;
+            ctx.clearRect(0, 0, dw * 2, dh);
+
+            // 左半：本机摄像头
+            if (this.displayVideo && this.displayVideo.videoWidth) {
+                ctx.save();
+                ctx.translate(dw, 0); ctx.scale(-1, 1);
+                ctx.drawImage(this.displayVideo, 0, 0, dw, dh);
+                ctx.restore();
+            }
+            // 左半骨架
+            var landmarks = this._lastPoseLandmarks;
+            if (landmarks) {
+                var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
+                ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 2;
+                BONES.forEach(function (b) {
+                    var a = landmarks[b[0]], bb = landmarks[b[1]];
+                    if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
+                        ctx.beginPath();
+                        ctx.moveTo(a.x * dw, a.y * dh);
+                        ctx.lineTo(bb.x * dw, bb.y * dh);
+                        ctx.stroke();
+                    }
+                });
+                landmarks.forEach(function (lm, i) {
+                    if (lm.visibility < 0.4) return;
+                    var x = lm.x * dw, y = lm.y * dh;
+                    var isLeg = i >= 23, isHand = i >= 15 && i <= 22;
+                    ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
+                    ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
+                    if (isHand || isLeg) { ctx.lineWidth = 2; ctx.strokeStyle = isHand ? '#FFFF00' : '#00FFFF'; ctx.stroke(); }
+                });
+            }
+            // 分割线
+            ctx.strokeStyle = '#CC8800'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(dw, 0); ctx.lineTo(dw, dh); ctx.stroke();
+
+            // 右半：IP 摄像头画面
+            ctx.drawImage(this._ipSnapshotCanvas, dw, 0, dw, dh);
+            return;
+        }
+
+        // 单机位模式
         var w = 640, h = 480;
         canvas.width = w; canvas.height = h;
         ctx.clearRect(0, 0, w, h);
 
-        // 画摄像头底图
         if (this._ipSnapshotCanvas) {
             ctx.drawImage(this._ipSnapshotCanvas, 0, 0, w, h);
         } else if (this.displayVideo && this.displayVideo.videoWidth) {
@@ -156,12 +216,23 @@ class MediaPipeManager {
             ctx.restore();
         }
 
-        // 画关键点（统一使用这个绘制方法）
         var landmarks = this._lastPoseLandmarks;
         if (landmarks) {
+            var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
+            ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 2;
+            BONES.forEach(function (b) {
+                var a = landmarks[b[0]], bb = landmarks[b[1]];
+                if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
+                    ctx.beginPath();
+                    ctx.moveTo(a.x * w, a.y * h);
+                    ctx.lineTo(bb.x * w, bb.y * h);
+                    ctx.stroke();
+                }
+            });
             landmarks.forEach(function (lm, i) {
+                if (lm.visibility < 0.4) return;
                 var x = lm.x * w, y = lm.y * h;
-                var isLeg = i >= 23 && i <= 32, isHand = i >= 15 && i <= 22;
+                var isLeg = i >= 23, isHand = i >= 15 && i <= 22;
                 ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
                 ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
                 if (isHand || isLeg) { ctx.lineWidth = 2; ctx.strokeStyle = isHand ? '#FFFF00' : '#00FFFF'; ctx.stroke(); }
@@ -221,13 +292,7 @@ class MediaPipeManager {
         this.pose.onResults((results) => {
             if (!results.poseLandmarks) return;
 
-            // 核心修正：X 轴去镜像（Selfie Mode 反转）
-            // MediaPipe 输出 0.0=画面最左, 1.0=画面最右
-            // 前置摄像头是镜像的，必须翻转 X 才能让左右手和骨骼方向正确
-            for (let i = 0; i < results.poseLandmarks.length; i++) {
-                results.poseLandmarks[i].x = 1.0 - results.poseLandmarks[i].x;
-            }
-
+            // 缓存原始数据（不做翻转，广播和骨骼使用原始数据）
             self._lastPoseLandmarks = results.poseLandmarks;
             // 本地摄像头模式：更新 canvas
             if (!self._ipPolling) self._refreshPanel();

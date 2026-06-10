@@ -93,6 +93,7 @@ KobeShootingGame.prototype.setup = function () {
 
   this.showReadyScreen(function () {
     self.state.isPlaying = true;
+    STATE.gameStats.time = 2400; // 40 分钟
     self.beginCountdown();
   });
 };

@@ -199,7 +199,7 @@ export class BasketballHandler {
         const recommendedPercent = Math.min(100, Math.max(0, ((dist - 2) / (maxDist - 2)) * 100));
 
         let desiredDist;
-        if (Math.abs(currentPercent - recommendedPercent) <= 9) {
+        if (Math.abs(currentPercent - recommendedPercent) <= 15) {
             desiredDist = dist;
             console.log(`%c[PERFECT SNAP] 临近最优蓄力区间触发完美吸附！强制锁死空心命中！`, 'color: #FFD700; font-weight: bold;');
         } else {
@@ -214,6 +214,9 @@ export class BasketballHandler {
         game.basketballBody.type = CANNON.Body.DYNAMIC;
         game.basketballBody.updateMassProperties();
         game.basketballBody.collisionResponse = true;
+        // 出手瞬间锁定球到计算起始点，防止 MediaPipe 偏移导致轨迹偏离
+        game.basketballBody.position.copy(handPos);
+        if (game.basketball) game.basketball.position.copy(handPos);
         game.basketballBody.velocity.set(vx, vy, vz);
         game.basketballBody.angularVelocity.set(
             (Math.random() - 0.5) * 10 * powerFactor,
@@ -259,6 +262,8 @@ export class BasketballHandler {
         game.basketballBody.type = CANNON.Body.DYNAMIC;
         game.basketballBody.updateMassProperties();
         game.basketballBody.collisionResponse = true;
+        game.basketballBody.position.copy(handPos);
+        if (game.basketball) game.basketball.position.copy(handPos);
 
         const chargeContainer = document.getElementById('charge-bar-container');
         if (chargeContainer) chargeContainer.style.display = 'none';
@@ -295,7 +300,7 @@ export class BasketballHandler {
                 const dz = exactZ - game.hoopCenter.z;
                 const distXZ = Math.sqrt(dx * dx + dz * dz);
 
-                if (distXZ < 0.45) {
+                if (distXZ < 0.55) {
                     game.hasScored = true;
                     game.score += game.pendingShotPoints;
                     game.sceneManager.updateScoreDisplay(game);

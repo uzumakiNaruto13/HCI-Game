@@ -24,6 +24,22 @@ export class PoseTracker {
             RightUpperLeg: 'rightupleg', RightLowerLeg: 'rightleg',
             LeftUpperLeg: 'leftupleg', LeftLowerLeg: 'leftleg'
         };
+
+        // 手机 IMU WebSocket
+        this.imuData = { beta: 90, isActive: false, lastUpdate: 0 };
+        this.smoothedThighAngle = 0;
+        try {
+            this.ws = new WebSocket('ws://10.160.211.244:8080');
+            var self = this;
+            this.ws.onmessage = function (e) {
+                var data = JSON.parse(e.data);
+                if (data.type === 'leg_imu') {
+                    self.imuData.beta = data.beta;
+                    self.imuData.isActive = true;
+                    self.imuData.lastUpdate = performance.now();
+                }
+            };
+        } catch (e) { console.warn('IMU WebSocket 连接失败'); }
     }
 
     setupPoseDetection(game) {
@@ -45,14 +61,19 @@ export class PoseTracker {
         };
         window.mpManager.subscribe(this._poseResultsHandler);
         game.poseDetector = window.mpManager.pose;
-        console.log('[PoseTracker] ✅ 已订阅 MediaPipeManager');
+        // 篮球场启用双机位拼盘模式
+        if (window.mpManager._ipSnapshotCanvas) {
+            window.mpManager._dualMode = true;
+        }
+        console.log('[PoseTracker] ✅ 已订阅 MediaPipeManager, 双机位:', window.mpManager._dualMode);
     }
 
     dispose() {
         if (window.mpManager && this._poseResultsHandler) {
             window.mpManager.unsubscribe(this._poseResultsHandler);
             this._poseResultsHandler = null;
-            console.log('[PoseTracker] 已退订 MediaPipeManager');
+            window.mpManager._dualMode = false;
+            console.log('[PoseTracker] 已退订 MediaPipeManager，双机位关闭');
         }
     }
 
@@ -76,6 +97,17 @@ export class PoseTracker {
                 });
             }
 
+            // ---- 3D 深度诊断：每 60 帧输出一次 Z 轴数据 ----
+            if (game.lastPoseWorldData && !game._depthDiagCount) game._depthDiagCount = 0;
+            if (game.lastPoseWorldData && game._depthDiagCount++ % 60 === 0) {
+                var wl = game.lastPoseWorldData;
+                var noseZ = wl[0] ? wl[0].z.toFixed(2) : '?';
+                var hipZ  = wl[23] ? wl[23].z.toFixed(2) : '?';
+                var lAnkZ = wl[27] ? wl[27].z.toFixed(2) : '?';
+                var rAnkZ = wl[28] ? wl[28].z.toFixed(2) : '?';
+                console.log('[3D深度] 鼻尖Z:' + noseZ + ' 髋Z:' + hipZ + ' 左踝Z:' + lAnkZ + ' 右踝Z:' + rAnkZ);
+            }
+
             let riggedPose = null;
             try { riggedPose = Kalidokit.Pose.solve(game.lastPoseWorldData, game.lastPoseData, { runtime: 'mediapipe', video: game.videoElement }); } catch (e) {}
 
@@ -95,7 +127,10 @@ export class PoseTracker {
                     const isLegBone = vrmName.toLowerCase().includes('leg');
                     if (isLegBone) continue;
 
-                    const kalidoQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(rot.x, -rot.y, -rot.z, 'XYZ'));
+                    // 手臂 X 方向单独处理（举手=举手）
+                    var isArm = vrmName.includes('Arm') || vrmName.includes('Hand');
+                    var eX = isArm ? rot.x : -rot.x;
+                    const kalidoQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(eX, -rot.y, -rot.z, 'XYZ'));
                     const targetQuat = game.initialQuats[vrmName].clone().multiply(kalidoQuat);
                     // 脊椎权重分配：多节脊柱共同承担躯干旋转
                     var weight = baseSmooth;
@@ -106,41 +141,98 @@ export class PoseTracker {
                 }
                 if (game.cachedBones.Hips && game.initialHipsPos) game.cachedBones.Hips.position.copy(game.initialHipsPos);
 
-                // ---- 向量 FK 腿部绑定：基于 3D 世界坐标的 1:1 腿部映射 ----
-                var wlmLeg = game.lastPoseWorldData;
-                if (wlmLeg && game.cachedBones.LeftUpperLeg && game.cachedBones.RightUpperLeg) {
-                    var lHipW = wlmLeg[23], lKneeW = wlmLeg[25], lAnkleW = wlmLeg[27];
-                    var rHipW = wlmLeg[24], rKneeW = wlmLeg[26], rAnkleW = wlmLeg[28];
-                    var visThresh = 0.6;
+                // ---- 躯干驱动两段式 Analytic IK (余弦定理) ----
+                if (!game._legLengths) {
+                    game._legLengths = { upper: game.modelHalfHeight * 0.45, lower: game.modelHalfHeight * 0.45 };
+                }
 
-                    // 左腿
-                    if (lHipW && lKneeW && lAnkleW && lKneeW.visibility > visThresh) {
-                        var hipVL = new THREE.Vector3(lHipW.x, lHipW.y, -lHipW.z);
-                        var kneeVL = new THREE.Vector3(lKneeW.x, lKneeW.y, -lKneeW.z);
-                        var ankleVL = new THREE.Vector3(lAnkleW.x, lAnkleW.y, -lAnkleW.z);
-                        var upperDirL = new THREE.Vector3().subVectors(kneeVL, hipVL).normalize();
-                        var targetQuatUL = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), upperDirL);
-                        game.cachedBones.LeftUpperLeg.quaternion.slerp(targetQuatUL, 0.3);
-                        if (game.cachedBones.LeftLowerLeg) {
-                            var lowerDirL = new THREE.Vector3().subVectors(ankleVL, kneeVL).normalize();
-                            game.cachedBones.LeftLowerLeg.rotation.x = upperDirL.angleTo(lowerDirL);
-                        }
+                if (game.cachedBones.LeftUpperLeg && game.cachedBones.Hips) {
+                    var hipWorldPos = new THREE.Vector3();
+                    game.cachedBones.Hips.getWorldPosition(hipWorldPos);
+
+                    var targetAnkleL = new THREE.Vector3(game.playerModel.position.x - 0.2, game.groundY, game.playerModel.position.z);
+                    var targetAnkleR = new THREE.Vector3(game.playerModel.position.x + 0.2, game.groundY, game.playerModel.position.z);
+
+                    function solveLegIK(hipPos, anklePos, upperLen, lowerLen) {
+                        var dist = hipPos.distanceTo(anklePos);
+                        var maxLen = upperLen + lowerLen;
+                        dist = Math.max(0.01, Math.min(dist, maxLen * 0.99));
+                        var cosKnee = (upperLen * upperLen + lowerLen * lowerLen - dist * dist) / (2 * upperLen * lowerLen);
+                        var kneeAngle = Math.acos(cosKnee);
+                        var boneKneeBend = Math.PI - kneeAngle;
+                        var cosHipComp = (upperLen * upperLen + dist * dist - lowerLen * lowerLen) / (2 * upperLen * dist);
+                        var hipCompAngle = Math.acos(cosHipComp);
+                        var dx = anklePos.x - hipPos.x, dy = hipPos.y - anklePos.y, dz = anklePos.z - hipPos.z;
+                        var verticalAngle = Math.atan2(Math.sqrt(dx * dx + dz * dz), dy);
+                        return { upper: verticalAngle + hipCompAngle, lower: boneKneeBend };
                     }
 
-                    // 右腿
-                    if (rHipW && rKneeW && rAnkleW && rKneeW.visibility > visThresh) {
-                        var hipVR = new THREE.Vector3(rHipW.x, rHipW.y, -rHipW.z);
-                        var kneeVR = new THREE.Vector3(rKneeW.x, rKneeW.y, -rKneeW.z);
-                        var ankleVR = new THREE.Vector3(rAnkleW.x, rAnkleW.y, -rAnkleW.z);
-                        var upperDirR = new THREE.Vector3().subVectors(kneeVR, hipVR).normalize();
-                        var targetQuatUR = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), upperDirR);
-                        game.cachedBones.RightUpperLeg.quaternion.slerp(targetQuatUR, 0.3);
+                    var ikL = solveLegIK(hipWorldPos, targetAnkleL, game._legLengths.upper, game._legLengths.lower);
+                    game.cachedBones.LeftUpperLeg.rotation.x = -ikL.upper;
+                    if (game.cachedBones.LeftLowerLeg) game.cachedBones.LeftLowerLeg.rotation.x = ikL.lower;
+
+                    var ikR = solveLegIK(hipWorldPos, targetAnkleR, game._legLengths.upper, game._legLengths.lower);
+                    game.cachedBones.RightUpperLeg.rotation.x = -ikR.upper;
+                    if (game.cachedBones.RightLowerLeg) game.cachedBones.RightLowerLeg.rotation.x = ikR.lower;
+                }
+
+                // ---- 手机 IMU 硬件级覆写（右腿）+ 左腿镜像对称 ----
+                if (this.imuData.isActive && (performance.now() - this.imuData.lastUpdate < 1000)) {
+                    var targetAngleRad = (this.imuData.beta - 90) * (Math.PI / 180);
+                    targetAngleRad = Math.min(0.2, Math.max(-2.0, targetAngleRad));
+                    this.smoothedThighAngle += (targetAngleRad - this.smoothedThighAngle) * 0.25;
+
+                    // 右腿：手机直接驱动
+                    if (game.cachedBones.RightUpperLeg) {
+                        game.cachedBones.RightUpperLeg.rotation.x = this.smoothedThighAngle;
                         if (game.cachedBones.RightLowerLeg) {
-                            var lowerDirR = new THREE.Vector3().subVectors(ankleVR, kneeVR).normalize();
-                            game.cachedBones.RightLowerLeg.rotation.x = upperDirR.angleTo(lowerDirR);
+                            game.cachedBones.RightLowerLeg.rotation.x = Math.max(0, -this.smoothedThighAngle * 1.2);
+                        }
+                    }
+                    // 左腿：镜像对称（带延迟平滑，模拟交替行走）
+                    if (!this._mirrorLegAngle) this._mirrorLegAngle = 0;
+                    this._mirrorLegAngle += (-this.smoothedThighAngle * 0.8 - this._mirrorLegAngle) * 0.15;
+                    if (game.cachedBones.LeftUpperLeg) {
+                        game.cachedBones.LeftUpperLeg.rotation.x = this._mirrorLegAngle;
+                        if (game.cachedBones.LeftLowerLeg) {
+                            game.cachedBones.LeftLowerLeg.rotation.x = Math.max(0, -this._mirrorLegAngle * 1.2);
                         }
                     }
                 }
+
+                // 单摄像头 Z 轴精度不足做细粒度倾角检测，深度交互已移除。
+                // ==== 躯干前倾冲刺引擎：肩膀超髋 → 受控前摔 → 爆发冲刺 ====
+                if (game.lastPoseData && game.playerBody && !game.isSprinting && game.state.isPlaying) {
+                    var lAnkleS = game.lastPoseData[27], rAnkleS = game.lastPoseData[28];
+                    var lHipS = game.lastPoseData[23], rHipS = game.lastPoseData[24];
+                    var lShS = game.lastPoseData[11], rShS = game.lastPoseData[12];
+                    if (lAnkleS && rAnkleS && lHipS && rHipS && lShS && rShS) {
+                        if (!game._sprintEngine) game._sprintEngine = { prevHipX: (lHipS.x + rHipS.x) / 2, energyPool: 0 };
+                        var se = game._sprintEngine;
+                        var midShX = (lShS.x + rShS.x) / 2, midShY = (lShS.y + rShS.y) / 2;
+                        var midHipX = (lHipS.x + rHipS.x) / 2, midHipY = (lHipS.y + rHipS.y) / 2;
+                        var leanOffset = Math.abs(midShX - midHipX);
+                        var torsoHeight = Math.abs(midHipY - midShY) || 0.01;
+                        var leanRatio = leanOffset / torsoHeight;
+                        var hipVelocity = Math.abs(midHipX - se.prevHipX);
+                        var strideAmplitude = Math.abs(lAnkleS.x - rAnkleS.x);
+                        var LEAN_THRESHOLD = 0.25;
+                        var currentEnergy = 0;
+                        if (leanRatio > LEAN_THRESHOLD) {
+                            var leanMultiplier = 1.0 + (leanRatio - LEAN_THRESHOLD) * 3;
+                            currentEnergy = strideAmplitude * hipVelocity * leanMultiplier;
+                        }
+                        se.energyPool = (se.energyPool * 0.8) + currentEnergy;
+                        if (se.energyPool > 0.003) {
+                            console.log('🔥 躯干前倾突破临界点，触发冲刺！');
+                            game.performSprint();
+                            se.energyPool = 0;
+                        }
+                        se.prevHipX = midHipX;
+                    }
+                }
+
+                // 可靠交互：手部 X/Y（弯腰拾球、蹲下蓄力）、手机 IMU（腿部）、行走检测。
 
                 // 弯腰拾球
                 if (game.lastPoseData && game.basketballBody && game.basketball && game.basketball.visible) {
