@@ -198,6 +198,38 @@
       <img id="sprint-img" src="games/subway/pictures/sprint.png" alt="sprint" />
     </div>
 
+    <!-- 教学模式：选择对话框 -->
+    <div id="tutorial-choice-overlay" style="display:none;">
+      <div class="tutorial-choice-card">
+        <div class="tutorial-choice-icon">🎓</div>
+        <h2 class="tutorial-choice-title">是否进入教学模式？</h2>
+        <p class="tutorial-choice-desc">新手引导 · 学习基本操作</p>
+        <div class="tutorial-choice-buttons">
+          <button id="btn-tutorial-yes" class="btn-tutorial btn-tutorial-yes">📖 进入教学模式</button>
+          <button id="btn-tutorial-no" class="btn-tutorial btn-tutorial-no">▶️ 直接开始游戏</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 教学模式：Galge角色对话 -->
+    <div id="tutorial-dialog-overlay" style="display:none;">
+      <div id="tutorial-char-wrap">
+        <img id="tutorial-char-img" src="games/subway/pictures/removebackground1781168113878.png" alt="角色" />
+      </div>
+      <div id="tutorial-dialog-bubble">
+        <p id="tutorial-dialog-text"></p>
+        <span id="tutorial-dialog-hint">点击或按空格继续</span>
+      </div>
+    </div>
+
+    <!-- 教学模式：纯文字居中提示 -->
+    <div id="tutorial-center-text" style="display:none;">
+      <p id="tutorial-center-text-content">跑不动了</p>
+    </div>
+
+    <!-- 教学模式：屏幕淡入淡出 -->
+    <div id="tutorial-fade-overlay" style="display:none;"></div>
+
     <div class="action-guide" id="actionGuide0">
       <div class="action-guide-title">⌨️ 键盘操作 · 地铁跑酷</div>
       <div class="action-guide-item"><span class="ag-key">空格 / ↑</span><span class="ag-arrow">→</span><span class="ag-effect">跳跃越障</span></div>
@@ -482,6 +514,13 @@
           </div>
         </div>
       </section>
+
+      <!-- 嘲讽视频 (地铁跑酷) -->
+      <div class="laugh-video-wrap" id="laughVideoWrap" style="display:none;text-align:center;margin:12px 0;">
+        <video id="laughVideo" playsinline
+          style="max-width:40%;max-height:220px;border-radius:12px;box-shadow:0 4px 30px rgba(255,50,50,0.3);transition:opacity 0.6s ease;"
+          onended="var v=document.getElementById('laughVideo');v.style.opacity='0';setTimeout(function(){v.style.opacity='1';var w=document.getElementById('laughVideoWrap');if(w)w.style.display='none';},600);"></video>
+      </div>
 
       <!-- 雷达图 -->
       <section>

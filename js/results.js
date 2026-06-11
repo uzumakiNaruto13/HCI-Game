@@ -4,6 +4,58 @@
 
 var currentGame = null;
 
+/** 显示教程选择对话框 */
+function showTutorialChoiceModal() {
+  // 先切换到 subway 屏幕
+  UIManager.showScreen('screen-game-subway');
+
+  var overlay = document.getElementById('tutorial-choice-overlay');
+  if (!overlay) { startGameDirect(); return; }
+
+  var btnYes = document.getElementById('btn-tutorial-yes');
+  var btnNo = document.getElementById('btn-tutorial-no');
+
+  overlay.style.display = 'flex';
+
+  function onYes() {
+    STATE._tutorialMode = true;
+    STATE._tutorialChoiceMade = true;
+    overlay.style.display = 'none';
+    removeListeners();
+    startGame(0);
+  }
+
+  function onNo() {
+    STATE._tutorialMode = false;
+    STATE._tutorialChoiceMade = true;
+    overlay.style.display = 'none';
+    removeListeners();
+    startGame(0);
+  }
+
+  function onKey(e) {
+    if (e.code === 'Digit1' || e.code === 'Numpad1') onYes();
+    else if (e.code === 'Digit2' || e.code === 'Numpad2') onNo();
+    else if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); onYes(); }
+  }
+
+  function removeListeners() {
+    if (btnYes) btnYes.removeEventListener('click', onYes);
+    if (btnNo) btnNo.removeEventListener('click', onNo);
+    window.removeEventListener('keydown', onKey);
+  }
+
+  if (btnYes) btnYes.addEventListener('click', onYes);
+  if (btnNo) btnNo.addEventListener('click', onNo);
+  window.addEventListener('keydown', onKey);
+}
+
+function startGameDirect() {
+  STATE._tutorialMode = false;
+  STATE._tutorialChoiceMade = true;
+  startGame(0);
+}
+
 /** 显示结算页面 */
 function showResults() {
   UIManager.showScreen('screen-results');
@@ -26,11 +78,34 @@ function showResults() {
     return '<div><i style="background:' + colors[i] + '"></i>' + l + ' (' + values[i] + ')</div>';
   }).join('');
   $('radarLegend').innerHTML = legend;
+
+  // 地铁跑酷：播放嘲讽视频
+  if (STATE.gameMode === 0) {
+    var wrap = document.getElementById('laughVideoWrap');
+    var lv = document.getElementById('laughVideo');
+    if (wrap && lv) {
+      wrap.style.display = 'block';
+      lv.style.opacity = '1';
+      lv.src = 'games/subway/video/biglaugh.mp4';
+      lv.currentTime = 0;
+      lv.play().catch(function () {});
+    }
+  } else {
+    var wrap2 = document.getElementById('laughVideoWrap');
+    if (wrap2) wrap2.style.display = 'none';
+  }
 }
 
 /** 返回大厅 */
 function backToLobby() {
   UIManager.showScreen('screen-lobby');
+  STATE._tutorialChoiceMade = false;
+  STATE._tutorialMode = false;
+  // 停止嘲讽视频
+  var lv = document.getElementById('laughVideo');
+  if (lv) { lv.pause(); lv.src = ''; }
+  var wrap = document.getElementById('laughVideoWrap');
+  if (wrap) wrap.style.display = 'none';
   if (currentGame) { currentGame.running = false; currentGame = null; }
 }
 
@@ -47,7 +122,12 @@ function startGame(mode) {
   STATE.gameRunning = true;
 
   switch (mode) {
-    case 0: currentGame = new SubwaySurfGame(); break;
+    case 0:
+      if (!STATE._tutorialChoiceMade) {
+        showTutorialChoiceModal();
+        return;
+      }
+      currentGame = new SubwaySurfGame(); break;
     case 1: currentGame = new KobeShootingGame(); break;
     case 2: currentGame = new GalgameGame(); break;
     case 3: currentGame = new TetrisGame(); break;
