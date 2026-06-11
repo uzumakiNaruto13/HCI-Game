@@ -14,8 +14,8 @@ SubwaySurfGame.prototype.setup = function () {
 
   this.obstacles = [];
   this.coins = [];
-  this.scrollSpeed = 6 * this.speed;
-  this.targetSpeed = 6 * this.speed;
+  this.scrollSpeed = 9.5 * this.speed;
+  this.targetSpeed = 9.5 * this.speed;
   this.distance = 0;
   this.playerY = 0;
   this.playerVY = 0;
@@ -301,17 +301,17 @@ SubwaySurfGame.prototype.update = function () {
   var stats = STATE.gameStats;
   var W = this.canvas.width, H = this.canvas.height;
 
-  // 速度随帧数增长，600 帧 (≈10s) 后封顶
-  var cappedFrames = Math.min(this.frameCount, 600);
-  this.speedLevel = 1 + Math.floor(cappedFrames / 100);
-  var baseSpeed = (5 + this.speedLevel * 1.5) * this.speed;
-  // Shift 松开后速度缓慢衰减回基础速度
-  if (!this._shiftHeld) {
-    this.targetSpeed = lerp(this.targetSpeed, baseSpeed, 0.02);
+  // 速度随距离增长，2000m 后封顶
+  this.speedLevel = 1 + Math.floor(Math.min(this.distance, 2000) / 300);
+  var baseSpeed = (8 + this.speedLevel * 1.5) * this.speed;
+  // Shift 加速 / 松开衰减
+  if (this._shiftHeld) {
+    this.targetSpeed = Math.min(16 * this.speed, this.targetSpeed + 0.5);
+  } else {
+    this.targetSpeed = lerp(this.targetSpeed, baseSpeed, 0.1);
   }
   this.targetSpeed = Math.max(baseSpeed, this.targetSpeed);
-  this.scrollSpeed = lerp(this.scrollSpeed, this.targetSpeed, 0.06);
-  // 减速能力：实际滚动速度减半
+  this.scrollSpeed = lerp(this.scrollSpeed, this.targetSpeed, 0.1);
   var effectiveSpeed = this.powerSlowActive ? this.scrollSpeed * 0.5 : this.scrollSpeed;
   this.distance += effectiveSpeed * 0.12;
 

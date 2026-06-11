@@ -213,10 +213,8 @@ TetrisGame.prototype.setup = function () {
   // 启动游戏循环
   this.startLoop();
 
-  // 显示准备界面
-  this.showReadyScreen(function () {
-    self.beginCountdown();
-  });
+  // 显示准备界面（无限模式）
+  this.showReadyScreen(function () {});
 };
 
 // ====================================================================
@@ -1147,9 +1145,9 @@ TetrisGame.prototype._syncHUD = function () {
   var levelEl = document.getElementById('level3');
   if (levelEl) levelEl.textContent = this.level;
 
-  // 倒计时
+  // 倒计时（无限模式）
   var timerEl = document.getElementById('timer3');
-  if (timerEl) timerEl.textContent = stats.time;
+  if (timerEl) timerEl.textContent = '∞';
 
   // HP
   UIManager.updateHP(stats.hp, 'hp3', 'hpText3');
@@ -1176,12 +1174,6 @@ TetrisGame.prototype._playKissAnimation = function () {
   if (this._animFrameId) {
     cancelAnimationFrame(this._animFrameId);
     this._animFrameId = null;
-  }
-
-  // 暂停倒计时
-  if (STATE.gameTimer) {
-    clearInterval(STATE.gameTimer);
-    STATE.gameTimer = null;
   }
 
   // 获取 DOM 元素
@@ -1216,9 +1208,8 @@ TetrisGame.prototype._playKissAnimation = function () {
     kissEffect.classList.remove('show');
     if (kissText) kissText.classList.remove('show');
 
-    // 恢复游戏
+    // 恢复游戏（无限模式）
     self._paused = false;
-    self.beginCountdown();
     self.startLoop();
   }, 5000);
 };

@@ -156,24 +156,20 @@ class MediaPipeManager {
     }
 
     _refreshPanel() {
+        // ---- 本地摄像头面板（始终显示） ----
         var canvas = document.getElementById('cam-canvas');
-        if (!canvas) return;
-        var ctx = canvas.getContext('2d');
+        if (canvas) {
+            var ctx = canvas.getContext('2d');
+            var w = 640, h = 480;
+            canvas.width = w; canvas.height = h;
+            ctx.clearRect(0, 0, w, h);
 
-        // 双机位模式：左侧本机 + 右侧 IP 摄像头拼盘
-        if (this._dualMode && this._ipSnapshotCanvas) {
-            var dw = 640, dh = 480;
-            canvas.width = dw * 2; canvas.height = dh;
-            ctx.clearRect(0, 0, dw * 2, dh);
-
-            // 左半：本机摄像头
             if (this.displayVideo && this.displayVideo.videoWidth) {
-                ctx.save();
-                ctx.translate(dw, 0); ctx.scale(-1, 1);
-                ctx.drawImage(this.displayVideo, 0, 0, dw, dh);
+                ctx.save(); ctx.translate(w, 0); ctx.scale(-1, 1);
+                ctx.drawImage(this.displayVideo, 0, 0, w, h);
                 ctx.restore();
             }
-            // 左半骨架
+
             var landmarks = this._lastPoseLandmarks;
             if (landmarks) {
                 var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
@@ -181,65 +177,31 @@ class MediaPipeManager {
                 BONES.forEach(function (b) {
                     var a = landmarks[b[0]], bb = landmarks[b[1]];
                     if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
-                        ctx.beginPath();
-                        ctx.moveTo(a.x * dw, a.y * dh);
-                        ctx.lineTo(bb.x * dw, bb.y * dh);
-                        ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(bb.x * w, bb.y * h); ctx.stroke();
                     }
                 });
                 landmarks.forEach(function (lm, i) {
                     if (lm.visibility < 0.4) return;
-                    var x = lm.x * dw, y = lm.y * dh;
+                    var x = lm.x * w, y = lm.y * h;
                     var isLeg = i >= 23, isHand = i >= 15 && i <= 22;
                     ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
                     ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
                     if (isHand || isLeg) { ctx.lineWidth = 2; ctx.strokeStyle = isHand ? '#FFFF00' : '#00FFFF'; ctx.stroke(); }
                 });
             }
-            // 分割线
-            ctx.strokeStyle = '#CC8800'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(dw, 0); ctx.lineTo(dw, dh); ctx.stroke();
-
-            // 右半：IP 摄像头画面
-            ctx.drawImage(this._ipSnapshotCanvas, dw, 0, dw, dh);
-            return;
         }
 
-        // 单机位模式
-        var w = 640, h = 480;
-        canvas.width = w; canvas.height = h;
-        ctx.clearRect(0, 0, w, h);
-
-        if (this._ipSnapshotCanvas) {
-            ctx.drawImage(this._ipSnapshotCanvas, 0, 0, w, h);
-        } else if (this.displayVideo && this.displayVideo.videoWidth) {
-            ctx.save();
-            ctx.translate(w, 0); ctx.scale(-1, 1);
-            ctx.drawImage(this.displayVideo, 0, 0, w, h);
-            ctx.restore();
-        }
-
-        var landmarks = this._lastPoseLandmarks;
-        if (landmarks) {
-            var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
-            ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 2;
-            BONES.forEach(function (b) {
-                var a = landmarks[b[0]], bb = landmarks[b[1]];
-                if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
-                    ctx.beginPath();
-                    ctx.moveTo(a.x * w, a.y * h);
-                    ctx.lineTo(bb.x * w, bb.y * h);
-                    ctx.stroke();
-                }
-            });
-            landmarks.forEach(function (lm, i) {
-                if (lm.visibility < 0.4) return;
-                var x = lm.x * w, y = lm.y * h;
-                var isLeg = i >= 23, isHand = i >= 15 && i <= 22;
-                ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
-                ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
-                if (isHand || isLeg) { ctx.lineWidth = 2; ctx.strokeStyle = isHand ? '#FFFF00' : '#00FFFF'; ctx.stroke(); }
-            });
+        // ---- IP 摄像头面板（双机位模式下独立显示） ----
+        var sideCanvas = document.getElementById('cam-canvas-side');
+        if (sideCanvas && this._dualMode && this._ipSnapshotCanvas) {
+            sideCanvas.style.display = 'block';
+            var sctx = sideCanvas.getContext('2d');
+            var sw = 640, sh = 480;
+            sideCanvas.width = sw; sideCanvas.height = sh;
+            sctx.clearRect(0, 0, sw, sh);
+            sctx.drawImage(this._ipSnapshotCanvas, 0, 0, sw, sh);
+        } else if (sideCanvas) {
+            sideCanvas.style.display = 'none';
         }
     }
 
