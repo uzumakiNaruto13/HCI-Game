@@ -434,3 +434,62 @@
   z-index: 2;
   pointer-events: none;
 }
+
+/* 摄像头信息栏（选择器 + 状态） */
+#cam-info-bar {
+  background: #12122a;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #2a2a4a;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+#cam-count-label {
+  color: #88aaff;
+  white-space: nowrap;
+  font-family: 'Microsoft YaHei', monospace;
+}
+
+#cam-select {
+  background: #1a1a3e;
+  color: #e0e0e0;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  font-family: 'Microsoft YaHei', monospace;
+}
+
+#cam-select:focus {
+  outline: none;
+  border-color: #6a6aaa;
+}
+
+#cam-select option {
+  background: #1a1a3e;
+  color: #e0e0e0;
+}
+
+#cam-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF8800;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+#cam-ip-input:focus {
+  outline: none;
+  border-color: #6aaa6a;
+}
+
+#cam-ip-input::placeholder {
+  color: #555;
+}

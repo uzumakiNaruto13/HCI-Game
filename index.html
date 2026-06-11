@@ -27,6 +27,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/kalidokit/dist/kalidokit.umd.js"></script>
+<!-- 姿态增强（可选，按需加载） -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script> -->
 </head>
 <body>
 
@@ -199,11 +201,11 @@
     </div>
 
     <div class="action-guide" id="actionGuide0">
-      <div class="action-guide-title">⌨️ 键盘操作 · 地铁跑酷</div>
-      <div class="action-guide-item"><span class="ag-key">空格 / ↑</span><span class="ag-arrow">→</span><span class="ag-effect">跳跃越障</span></div>
-      <div class="action-guide-item"><span class="ag-key">↓</span><span class="ag-arrow">→</span><span class="ag-effect">深蹲滑铲</span></div>
-      <div class="action-guide-item"><span class="ag-key">Shift</span><span class="ag-arrow">→</span><span class="ag-effect">加速奔跑</span></div>
-      <div class="action-guide-item"><span class="ag-key">X</span><span class="ag-arrow">→</span><span class="ag-effect">冲刺斩击 (冷却3s)</span></div>
+      <div class="action-guide-title">🎮 体感 + 键盘 · 地铁跑酷</div>
+      <div class="action-guide-item"><span class="ag-key">🦘 身体上跳</span><span class="ag-arrow">→</span><span class="ag-effect">跳跃越障</span></div>
+      <div class="action-guide-item"><span class="ag-key">🧎 蹲下</span><span class="ag-arrow">→</span><span class="ag-effect">深蹲滑铲</span></div>
+      <div class="action-guide-item"><span class="ag-key">🏃 摆臂跑步</span><span class="ag-arrow">→</span><span class="ag-effect">加速奔跑</span></div>
+      <div class="action-guide-item"><span class="ag-key">空格/↑ 跳 · ↓ 滑 · Shift 加速 · X 冲刺</span></div>
       <div class="action-guide-item ag-hint">按ESC键=暂停游戏</div>
     </div>
 
@@ -545,6 +547,7 @@
   </div>
 </div>
 <!-- 全局体感管理器（面板 HTML 之后加载，确保 #cam-video 已存在） -->
+<script src="js/gesture-utils.js"></script>
 <script src="js/MediaPipeManager.js"></script>
 </body>
 </html>

@@ -134,31 +134,98 @@ SubwaySurfGame.prototype.setup = function () {
   window.addEventListener('keydown', this._keyHandler);
   window.addEventListener('keyup', this._keyUpHandler);
 
-  // 体感跳跃：订阅 MediaPipeManager，躯干上移 → 触发跳跃
+  // ==== 体感控制：跳跃 + 滑铲 + 加速 ====
   var self = this;
   this._poseJumpAccum = 0;
   this._posePrevHipY = null;
-  this._poseJumpHandler = function (results) {
-    if (!self._running || self.isJumping) return;
+  this._squatBaseline = null;   // 站立时的髋部Y基准
+  this._squatSmooth = null;     // 平滑后的髋部Y
+  this._slideArmCooldown = 0;  // 手势冷却
+
+  this._poseHandler = function (results) {
+    if (!self._running) return;
     var lm = results.poseLandmarks;
+    if (!lm) return;
+
+    var GU = window.GestureUtils;
+    var body = GU ? GU.getBodyScale(lm) : null;
+    var torsoH = body ? body.torsoHeight : 0.18;
+    var sw = body ? body.shoulderWidth : 0.15;
+
     var lHip = lm[23], rHip = lm[24];
-    if (!lHip || !rHip) { self._posePrevHipY = null; self._poseJumpAccum = 0; return; }
+    var lShoulder = lm[11], rShoulder = lm[12];
+    var lWrist = lm[15], rWrist = lm[16];
+    if (!lHip || !rHip) return;
+
     var hipY = (lHip.y + rHip.y) / 2;
-    if (self._posePrevHipY !== null) {
-      var delta = self._posePrevHipY - hipY; // 正值 = 向上移动
-      if (Math.abs(delta) > 0.003) self._poseJumpAccum += delta;
-      if (self._poseJumpAccum < 0) self._poseJumpAccum = 0; // 只累积向上
-      if (self._poseJumpAccum > 0.025) {
-        self.isJumping = true;
-        self.isSliding = false;
-        self.playerVY = -18 * self.speed;
-        self._poseJumpAccum = 0;
+
+    // ---- 跳跃：髋部快速上移 ----
+    if (!self.isJumping) {
+      if (self._posePrevHipY !== null) {
+        var delta = self._posePrevHipY - hipY;
+        var normDelta = delta / torsoH;
+        if (normDelta > 0.008) self._poseJumpAccum += normDelta;
+        if (self._poseJumpAccum < 0) self._poseJumpAccum = 0;
+        self._poseJumpAccum *= 0.9;
+        if (self._poseJumpAccum > 0.12) {
+          self.isJumping = true;
+          self.isSliding = false;
+          self.playerVY = -18 * self.speed;
+          self._poseJumpAccum = 0;
+        }
+        if (self._poseJumpAccum > 0.5) self._poseJumpAccum = 0;
       }
-      if (Math.abs(self._poseJumpAccum) > 0.1) self._poseJumpAccum = 0; // 误差清理
     }
     self._posePrevHipY = hipY;
+
+    // ---- 滑铲：蹲下（髋部下降）或 双手前伸 ----
+    if (!self.isJumping && !self.isSliding) {
+      // 初始化站立基准
+      if (self._squatBaseline === null) {
+        self._squatBaseline = hipY;
+        self._squatSmooth = hipY;
+      }
+      // EMA 平滑髋部Y
+      self._squatSmooth += (hipY - self._squatSmooth) * 0.3;
+      // 缓慢更新站立基准（适应不同站姿）
+      self._squatBaseline += (self._squatSmooth - self._squatBaseline) * 0.02;
+
+      var squatDepth = (self._squatSmooth - self._squatBaseline) / torsoH;
+
+      // 方法1：蹲下超过躯干高度 20%
+      var isSquat = squatDepth > 0.2;
+
+      // 方法2：双手同时向前伸（手腕Z值远离摄像头，visibility下降）
+      var bothHandsForward = false;
+      if (lWrist && rWrist && lShoulder && rShoulder) {
+        var lwVis = lWrist.visibility || 0;
+        var rwVis = rWrist.visibility || 0;
+        // 双手前伸时手腕 visibility 会明显下降（被身体遮挡）
+        if (lwVis < 0.3 && rwVis < 0.3) bothHandsForward = true;
+      }
+
+      if (isSquat || bothHandsForward) {
+        self.isSliding = true;
+        self.slideTimer = 25;
+        self._squatBaseline = null; // 重置基准
+      }
+    }
+
+    // ---- 加速：跑步姿态（双臂大幅摆动） ----
+    if (lWrist && rWrist && lShoulder && rShoulder && self._slideArmCooldown <= 0) {
+      var lwY = lWrist.y, rwY = rWrist.y;
+      var lsY = lShoulder.y, rsY = rShoulder.y;
+      // 一只手高一只手低 = 摆臂
+      var armDiff = Math.abs((lwY - lsY) - (rwY - rsY));
+      var normArmDiff = armDiff / sw;
+      // 摆臂幅度超过肩宽 50% = 跑步姿态
+      if (normArmDiff > 0.5) {
+        self.targetSpeed = Math.min(16 * self.speed, self.targetSpeed + 0.3 * self.speed);
+      }
+    }
+    if (self._slideArmCooldown > 0) self._slideArmCooldown--;
   };
-  if (window.mpManager) window.mpManager.subscribe(this._poseJumpHandler);
+  if (window.mpManager) window.mpManager.subscribe(this._poseHandler);
 
   // 开场动画序列
   this._startIntroSequence();

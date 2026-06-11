@@ -125,24 +125,31 @@ GameEngine.prototype.showReadyScreen = function (onReady) {
   this._readyKeyHandler = keyHandler;
 
   // 体感点头确认：2 次点头 → 进入游戏
-  var nodCount = 0, nodState = 0, nodTimer = 0;
-  var prevNoseY, nodAccumY = 0;
+  var nodCount = 0, nodState = 0, nodTimer = 0, prevNoseY, nodAccumY = 0;
+
   var nodHandler = function (results) {
     if (!self._readyActive) return;
     var lm = results.poseLandmarks;
-    var nose = lm ? lm[0] : null;
-    if (!nose) return;
+    if (!lm) return;
+
+    var GU = window.GestureUtils;
+    var body = GU ? GU.getBodyScale(lm) : null;
+    var nose = lm[0];
+    if (!nose || (nose.visibility || 0) < 0.5) return;
+
     if (typeof prevNoseY === 'undefined') prevNoseY = nose.y;
 
     var deltaY = nose.y - prevNoseY;
     prevNoseY = nose.y;
-    if (Math.abs(deltaY) > 0.005) nodAccumY += deltaY;
-    if (nodTimer > 0) nodTimer--;
+    if (Math.abs(deltaY) > 0.004) nodAccumY += deltaY;
+    nodAccumY *= 0.88;
 
-    if (nodState === 0 && nodAccumY > 0.04) { nodState = 1; nodAccumY = 0; }
-    else if (nodState === 1 && nodAccumY < -0.04) { nodState = 0; nodCount++; nodTimer = 60; nodAccumY = 0; }
+    // 阈值：原始坐标，点头位移约 0.02-0.05
+    if (nodState === 0 && nodAccumY > 0.035) { nodState = 1; nodAccumY = 0; }
+    else if (nodState === 1 && nodAccumY < -0.035) { nodState = 0; nodCount++; nodTimer = 90; nodAccumY = 0; }
+    if (nodTimer > 0) nodTimer--;
     if (nodTimer <= 0 && nodCount > 0) nodCount = 0;
-    if (Math.abs(nodAccumY) > 0.15) nodAccumY = 0;
+    if (Math.abs(nodAccumY) > 0.5) nodAccumY = 0;
 
     if (nodCount >= 2) {
       nodCount = 0; nodState = 0; nodAccumY = 0;

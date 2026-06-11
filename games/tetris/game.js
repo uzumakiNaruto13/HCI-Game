@@ -927,83 +927,82 @@ TetrisGame.prototype._getGhostY = function () {
 };
 
 // ====================================================================
-// 体感输入处理
+// 体感输入处理（身体比例自适应 + 简单防抖）
 // ====================================================================
 
 TetrisGame.prototype._handlePoseInput = function (results) {
   var lm = results.poseLandmarks;
   if (!lm) return;
 
-  var lWrist = lm[15]; // 左手腕
-  var rWrist = lm[16]; // 右手腕
-  var lShoulder = lm[11]; // 左肩
-  var rShoulder = lm[12]; // 右肩
-  var nose = lm[0]; // 鼻尖
-
+  var lWrist = lm[15], rWrist = lm[16];
+  var lShoulder = lm[11], rShoulder = lm[12];
+  var nose = lm[0];
   if (!lWrist || !rWrist || !lShoulder || !rShoulder || !nose) return;
 
-  // 手势冷却
-  if (this.gestureCooldown > 0) {
-    this.gestureCooldown--;
-    return;
+  // 可见性门控
+  if ((lWrist.visibility < 0.4) && (rWrist.visibility < 0.4)) return;
+  if ((lShoulder.visibility < 0.4) || (rShoulder.visibility < 0.4)) return;
+
+  // ---- 身体比例（用于自适应阈值） ----
+  var GU = window.GestureUtils;
+  var body = GU ? GU.getBodyScale(lm) : null;
+  var sw = body ? body.shoulderWidth : 0.15; // fallback 肩宽
+
+  // ---- 冷却 ----
+  if (this.gestureCooldown > 0) { this.gestureCooldown--; return; }
+
+  // ---- 手臂举起（自适应阈值） ----
+  var leftArmUp, rightArmUp;
+  if (GU) {
+    leftArmUp = GU.isArmUp(lm, 'left');
+    rightArmUp = GU.isArmUp(lm, 'right');
+  } else {
+    // fallback：简单判断
+    leftArmUp = lWrist.y < lShoulder.y - 0.05;
+    rightArmUp = rWrist.y < rShoulder.y - 0.05;
   }
 
-  // ---- 手臂状态检测 ----
-  // 左臂举起：左手腕高于左肩
-  var leftArmUp = lWrist.y < lShoulder.y - 0.05;
-  // 右臂举起：右手腕高于右肩
-  var rightArmUp = rWrist.y < rShoulder.y - 0.05;
-  // 双臂交叉：左手腕在右手腕的右侧（镜像坐标系）
-  var armsCrossed = lWrist.x > rWrist.x - 0.05;
+  // ---- 双臂交叉（自适应阈值） ----
+  var armsCrossed;
+  if (GU) {
+    armsCrossed = GU.isArmsCrossed(lm);
+  } else {
+    armsCrossed = lWrist.x > rWrist.x - 0.05;
+  }
 
-  // ---- 点头检测 ----
+  // ---- 点头检测（阻尼累积） ----
   if (this.prevNoseY !== null) {
     var deltaY = nose.y - this.prevNoseY;
-    if (Math.abs(deltaY) > 0.003) {
-      this.nodAccumY += deltaY;
-    }
+    if (Math.abs(deltaY) > 0.003) this.nodAccumY += deltaY;
   }
   this.prevNoseY = nose.y;
-  this.nodAccumY *= 0.9; // 阻尼衰减
+  this.nodAccumY *= 0.88;
 
-  // 点头状态机：向下超过阈值 → 向上超过阈值 = 一次点头
+  // 点头状态机（原始坐标阈值，点头位移约 0.02-0.05）
   if (this.nodState === 0 && this.nodAccumY > 0.03) {
-    this.nodState = 1;
-    this.nodAccumY = 0;
+    this.nodState = 1; this.nodAccumY = 0;
   } else if (this.nodState === 1 && this.nodAccumY < -0.03) {
-    this.nodState = 0;
-    this.nodCount++;
-    this.nodTimer = 45;
-    this.nodAccumY = 0;
+    this.nodState = 0; this.nodCount++; this.nodTimer = 50; this.nodAccumY = 0;
   }
-
-  // 超时重置
   if (this.nodTimer > 0) this.nodTimer--;
   if (this.nodTimer <= 0 && this.nodCount > 0) this.nodCount = 0;
 
-  // 点头触发加速下落（1次点头即可）
-  var nodDetected = this.nodCount >= 1;
-  if (nodDetected) {
-    this.nodCount = 0;
-    this.nodState = 0;
-    this.fastDrop = true;
-    this.fastDropTimer = 30; // 持续约0.5秒
+  if (this.nodCount >= 1) {
+    this.nodCount = 0; this.nodState = 0;
+    this.fastDrop = true; this.fastDropTimer = 30;
     this._showGesture('⬇️ 加速');
     STATE.gameStats.cal += 0.02;
   }
 
-  // 快速下落计时器
   if (this.fastDropTimer > 0) {
     this.fastDropTimer--;
-    if (this.fastDropTimer <= 0) {
-      this.fastDrop = false;
-    }
+    if (this.fastDropTimer <= 0) this.fastDrop = false;
   }
 
   // ---- 左臂举起 → 左移 ----
   if (leftArmUp && !this.prevLeftArmUp) {
     this._movePiece(-1, 0);
-    this.gestureCooldown = 10;
+    this.gestureCooldown = 12;
     this._showGesture('👈 左移');
     STATE.gameStats.cal += 0.02;
     STATE.actionStats.left++;
@@ -1012,7 +1011,7 @@ TetrisGame.prototype._handlePoseInput = function (results) {
   // ---- 右臂举起 → 右移 ----
   if (rightArmUp && !this.prevRightArmUp) {
     this._movePiece(1, 0);
-    this.gestureCooldown = 10;
+    this.gestureCooldown = 12;
     this._showGesture('👉 右移');
     STATE.gameStats.cal += 0.02;
     STATE.actionStats.right++;
@@ -1021,7 +1020,7 @@ TetrisGame.prototype._handlePoseInput = function (results) {
   // ---- 双臂交叉 → 旋转 ----
   if (armsCrossed && !this.prevArmsCrossed) {
     this._rotatePiece();
-    this.gestureCooldown = 15;
+    this.gestureCooldown = 18;
     this._showGesture('🔄 旋转');
     STATE.gameStats.cal += 0.05;
     STATE.actionStats.rotate++;

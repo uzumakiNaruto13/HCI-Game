@@ -278,114 +278,81 @@ function initSystem() {
     window.addEventListener('mouseup', function () { isDragging = false; isResizing = false; });
   })();
 
-  // === 大厅手势：手部上下划切换游戏 + 点头确认进入 ===
+  // === 大厅手势：身体比例自适应 + 简单防抖 ===
   if (window.mpManager) {
-    var gestureCooldown = 0, prevWristY = null, wristMoveAccum = 0;
-    var nodState = 0, nodCount = 0, nodTimer = 0; // 0=等待下, 1=等待上
+    var swipeAccumL = 0, swipeAccumR = 0, swipePrevL = null, swipePrevR = null;
+    var swipeCooldown = 0;
+    var nodState = 0, nodCount = 0, nodTimer = 0, prevNoseY = null, nodAccumY = 0;
 
     window.mpManager.subscribe(function (results) {
       var isLobby = document.getElementById('screen-lobby').classList.contains('show');
-      if (!isLobby) { prevWristY = null; wristMoveAccum = 0; nodCount = 0; return; }
+      if (!isLobby) { swipePrevL = null; swipePrevR = null; nodCount = 0; return; }
 
       var lm = results.poseLandmarks;
       if (!lm) return;
 
-      // ---- 全新滑动检测：独立双臂追踪 + 阻尼衰减机制 ----
-      var lWrist = lm[15], rWrist = lm[16];
+      var GU = window.GestureUtils;
+      var body = GU ? GU.getBodyScale(lm) : null;
+      var sw = body ? body.shoulderWidth : 0.15;
 
-      if (typeof window.swipeState === 'undefined') {
-        window.swipeState = { prevL: null, prevR: null, accumL: 0, accumR: 0 };
+      var lWrist = lm[15], rWrist = lm[16], nose = lm[0];
+      if (!lWrist || !rWrist || !nose) return;
+
+      // ---- 滑动检测 ----
+      if (swipeCooldown > 0) { swipeCooldown--; swipePrevL = lWrist.y; swipePrevR = rWrist.y; return; }
+
+      // 左手
+      if (lWrist.visibility > 0.4 && swipePrevL !== null) {
+        var dyL = (lWrist.y - swipePrevL) / sw; // 归一化
+        if (Math.abs(dyL) > 0.02) swipeAccumL += dyL;
       }
-      var s = window.swipeState;
+      swipePrevL = lWrist.y;
 
-      if (gestureCooldown > 0) {
-        gestureCooldown--;
-        s.accumL = 0; s.accumR = 0;
-        s.prevL = lWrist ? lWrist.y : null;
-        s.prevR = rWrist ? rWrist.y : null;
-      } else {
-        // 左手独立
-        if (lWrist) {
-          if (s.prevL !== null) {
-            var dyL = lWrist.y - s.prevL;
-            if (Math.abs(dyL) > 0.005) s.accumL += dyL;
-          }
-          s.prevL = lWrist.y;
-        } else { s.accumL = 0; s.prevL = null; }
+      // 右手
+      if (rWrist.visibility > 0.4 && swipePrevR !== null) {
+        var dyR = (rWrist.y - swipePrevR) / sw;
+        if (Math.abs(dyR) > 0.02) swipeAccumR += dyR;
+      }
+      swipePrevR = rWrist.y;
 
-        // 右手独立
-        if (rWrist) {
-          if (s.prevR !== null) {
-            var dyR = rWrist.y - s.prevR;
-            if (Math.abs(dyR) > 0.005) s.accumR += dyR;
-          }
-          s.prevR = rWrist.y;
-        } else { s.accumR = 0; s.prevR = null; }
+      // 阻尼
+      swipeAccumL *= 0.85;
+      swipeAccumR *= 0.85;
 
-        // 阻尼衰减：每帧衰减 15%
-        s.accumL *= 0.85;
-        s.accumR *= 0.85;
-
-        var triggered = 0;
-        var swipeThreshold = 0.08;
-        if (s.accumL > swipeThreshold || s.accumR > swipeThreshold) triggered = 1;
-        if (s.accumL < -swipeThreshold || s.accumR < -swipeThreshold) triggered = -1;
-
-        if (triggered === 1) {
-          STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
-          updateLobbyUI(STATE.gameMode);
-          gestureCooldown = 25;
-          console.log('[手势] 往下滑动：切换到下一个游戏');
-        } else if (triggered === -1) {
-          STATE.gameMode = Math.max(0, STATE.gameMode - 1);
-          updateLobbyUI(STATE.gameMode);
-          gestureCooldown = 25;
-          console.log('[手势] 往上滑动：切换到上一个游戏');
-        }
+      // 阈值（归一化后）
+      var swipeThresh = 0.5;
+      if (swipeAccumL > swipeThresh || swipeAccumR > swipeThresh) {
+        STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
+        updateLobbyUI(STATE.gameMode);
+        swipeCooldown = 25; swipeAccumL = 0; swipeAccumR = 0;
+        console.log('[手势] 👋 下一个游戏');
+      } else if (swipeAccumL < -swipeThresh || swipeAccumR < -swipeThresh) {
+        STATE.gameMode = Math.max(0, STATE.gameMode - 1);
+        updateLobbyUI(STATE.gameMode);
+        swipeCooldown = 25; swipeAccumL = 0; swipeAccumR = 0;
+        console.log('[手势] 👋 上一个游戏');
       }
 
-      // ---- 全新点头检测：基于相对位移的波峰波谷检测 ----
-      var nose = lm[0]; // 鼻尖
-      if (nose) {
-        if (typeof window.prevNoseY === 'undefined') window.prevNoseY = nose.y;
-        if (typeof window.nodAccumY === 'undefined') window.nodAccumY = 0;
-
-        var deltaY = nose.y - window.prevNoseY;
-        window.prevNoseY = nose.y;
-
-        // 只有移动速度较快时才计入累积（过滤身体自然晃动）
-        if (Math.abs(deltaY) > 0.005) {
-          window.nodAccumY += deltaY;
+      // ---- 点头检测 ----
+      if (nose.visibility > 0.5) {
+        if (prevNoseY !== null) {
+          var dY = nose.y - prevNoseY;
+          if (Math.abs(dY) > 0.003) nodAccumY += dY;
         }
+        prevNoseY = nose.y;
+        nodAccumY *= 0.85;
 
-        if (nodTimer > 0) nodTimer--;
+        // 阈值：0.035（原始坐标，点头时鼻尖 Y 位移约 0.02-0.05）
+        if (nodState === 0 && nodAccumY > 0.035) { nodState = 1; nodAccumY = 0; }
+        else if (nodState === 1 && nodAccumY < -0.035) { nodState = 0; nodCount++; nodTimer = 90; nodAccumY = 0; }
+      }
+      if (nodTimer > 0) nodTimer--;
+      if (nodTimer <= 0 && nodCount > 0) nodCount = 0;
 
-        // 状态 0→1：鼻子快速向下位移超过 0.04（约画面高度 4%）
-        if (nodState === 0 && window.nodAccumY > 0.04) {
-          nodState = 1;
-          window.nodAccumY = 0;
-        }
-        // 状态 1→0：鼻子快速向上抬起超过 -0.04
-        else if (nodState === 1 && window.nodAccumY < -0.04) {
-          nodState = 0;
-          nodCount++;
-          nodTimer = 60;
-          window.nodAccumY = 0;
-          console.log('[手势] 成功检测到 1 次点头！目前总计: ' + nodCount);
-        }
-
-        // 超时重置
-        if (nodTimer <= 0 && nodCount > 0) { nodCount = 0; console.log('[手势] 点头超时，已重置'); }
-
-        // 缓慢低头等误差清理
-        if (Math.abs(window.nodAccumY) > 0.15) { window.nodAccumY = 0; }
-
-        // 2 次点头触发
-        if (nodCount >= 2) {
-          console.log('[手势] 达成 2 次点头，进入游戏！');
-          nodCount = 0; nodState = 0; window.nodAccumY = 0;
-          startGame(STATE.gameMode);
-        }
+      if (nodCount >= 2) {
+        nodCount = 0; nodState = 0; nodAccumY = 0;
+        console.log('[手势] ✅ 2次点头，进入游戏');
+        startGame(STATE.gameMode);
       }
     });
   }

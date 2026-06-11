@@ -271,7 +271,12 @@ export class PoseTracker {
                             ws.activeTimer = 0.45;
                             var shDx = rSh2.x - lSh2.x, shDy = rSh2.y - lSh2.y;
                             var shLen = Math.sqrt(shDx * shDx + shDy * shDy);
-                            if (shLen > 0.01) { ws.moveX = -shDy / shLen; ws.moveZ = shDx / shLen; }
+                            if (shLen > 0.01) {
+                                // 注意：selfieMode=false 时 X 坐标未镜像，需要翻转 X 方向
+                                // 使用户面朝摄像头时，移动方向与视觉一致
+                                ws.moveX = shDy / shLen;   // 翻转 X（原来是 -shDy）
+                                ws.moveZ = shDx / shLen;
+                            }
                         }
                         ws.prevSign = currentSign;
                         if (ws.activeTimer > 0) {
