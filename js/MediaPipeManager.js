@@ -48,20 +48,23 @@ class MediaPipeManager {
             document.body.appendChild(this.displayVideo);
         }
 
-        // === 主方案：外接 IP 摄像头 ===
-        var ipCamUrl = 'http://10.160.79.92:8080';
-        var ipSuccess = await this._tryIPCamera(ipCamUrl);
-        if (ipSuccess) {
-            console.log('[MediaPipeManager] ✅ 外接摄像头已连接');
-            this.initPose();
-            return;
-        }
+        var ipCamUrl = 'http://10.124.139.147:8080';
 
-        // === 备选方案：本地电脑摄像头 ===
-        console.log('[MediaPipeManager] 外接摄像头不可用，fallback 到本地摄像头...');
+        // === 主方案：本地电脑摄像头 ===
         var localSuccess = await this._tryLocalCamera();
         if (localSuccess) {
             console.log('[MediaPipeManager] ✅ 本地摄像头已连接');
+            this.initPose();
+            // 本地成功后再尝试加载 IP 摄像头（面板展示用）
+            this._tryIPCamera(ipCamUrl);
+            return;
+        }
+
+        // === 备选方案：外接 IP 摄像头 ===
+        console.log('[MediaPipeManager] 本地摄像头不可用，尝试外接...');
+        var ipSuccess = await this._tryIPCamera(ipCamUrl);
+        if (ipSuccess) {
+            console.log('[MediaPipeManager] ✅ 外接摄像头已连接');
             this.initPose();
             return;
         }

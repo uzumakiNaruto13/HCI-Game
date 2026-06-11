@@ -625,6 +625,9 @@ TetrisGame.prototype._randomPiece = function () {
 };
 
 TetrisGame.prototype._spawnPiece = function () {
+  this.fastDrop = false;
+  this.fastDropTimer = 0;
+
   this.currentPiece = this.nextPiece;
   this.nextPiece = this._randomPiece();
 
@@ -719,6 +722,10 @@ TetrisGame.prototype._lockPiece = function () {
       }
     }
   }
+
+  // 清除体感加速残留
+  this.fastDrop = false;
+  this.fastDropTimer = 0;
 
   // 清除当前方块
   this.currentPiece = null;
@@ -1000,22 +1007,22 @@ TetrisGame.prototype._handlePoseInput = function (results) {
     }
   }
 
-  // ---- 左臂举起 → 左移 ----
+  // ---- 左臂抬起 ----
   if (leftArmUp && !this.prevLeftArmUp) {
-    this._movePiece(-1, 0);
-    this.gestureCooldown = 10;
-    this._showGesture('👈 左移');
-    STATE.gameStats.cal += 0.02;
-    STATE.actionStats.left++;
-  }
-
-  // ---- 右臂举起 → 右移 ----
-  if (rightArmUp && !this.prevRightArmUp) {
     this._movePiece(1, 0);
     this.gestureCooldown = 10;
     this._showGesture('👉 右移');
     STATE.gameStats.cal += 0.02;
     STATE.actionStats.right++;
+  }
+
+  // ---- 右臂抬起 ----
+  if (rightArmUp && !this.prevRightArmUp) {
+    this._movePiece(-1, 0);
+    this.gestureCooldown = 10;
+    this._showGesture('👈 左移');
+    STATE.gameStats.cal += 0.02;
+    STATE.actionStats.left++;
   }
 
   // ---- 双臂交叉 → 旋转 ----

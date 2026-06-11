@@ -29,19 +29,25 @@
         var ws = null;
         var connected = false;
 
-        // 连接电脑端 WebSocket 服务器
+        // 连接电脑端 WebSocket 服务器（自动重连 + 心跳）
         function connect() {
-            ws = new WebSocket('ws://10.160.211.244:8080');
+            ws = new WebSocket('ws://10.124.96.234:8080');
             ws.onopen = function () {
                 connected = true;
                 document.getElementById('status').innerText = '✅ 已连接！放入裤兜';
+                // 心跳：每 10 秒发 ping
+                ws._heartbeat = setInterval(function () {
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
+                }, 10000);
             };
             ws.onclose = function () {
                 connected = false;
-                document.getElementById('status').innerText = '❌ 断开，点击重连';
+                if (ws._heartbeat) clearInterval(ws._heartbeat);
+                document.getElementById('status').innerText = '❌ 断开，1秒后重连...';
+                setTimeout(connect, 1000);
             };
             ws.onerror = function () {
-                document.getElementById('status').innerText = '⚠️ 连接失败，点击重试';
+                document.getElementById('status').innerText = '⚠️ 连接失败，自动重试...';
             };
         }
 
