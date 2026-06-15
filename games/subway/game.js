@@ -42,7 +42,7 @@ SubwaySurfGame.prototype.setup = function () {
   this.runFrames = [];
 
   // 影子角色 (右侧蓝色幻影，完美AI)
-  this.shadowOffset = 160;
+  this.shadowOffset = -80; // 同一起跑线，略偏左
   this.shadowY = 0;
   this.shadowVY = 0;
   this.shadowJumping = false;
@@ -1335,25 +1335,7 @@ SubwaySurfGame.prototype.update = function () {
       }
     }
   }
-  // 影子自动吃金币 (bonus 加分)
-  for (var sj2 = this.coins.length - 1; sj2 >= 0; sj2--) {
-    var sCoin = this.coins[sj2];
-    if (!sCoin.collected && Math.hypot(shadowX - sCoin.x, this.shadowY - 30 - sCoin.y) < 35) {
-      sCoin.collected = true;
-      stats.score += this.powerDoubleActive ? 10 : 5;
-      stats.cal += 0.1;
-      this.emitParticles(sCoin.x, sCoin.y, 'rgba(100,180,255,', 6);
-    }
-  }
-  // 影子自动吃特殊币
-  for (var ssj = this.specialCoins.length - 1; ssj >= 0; ssj--) {
-    var sSc = this.specialCoins[ssj];
-    if (!sSc.collected && Math.hypot(shadowX - sSc.x, this.shadowY - 30 - sSc.y) < 40) {
-      sSc.collected = true;
-      this._applyPowerUp(sSc.type);
-      this.emitParticles(sSc.x, sSc.y, 'rgba(100,180,255,', 10);
-    }
-  }
+  // 影子不拾取金币和特殊币（取消获取能力）
 
   // 影子动画计时
   this.shadowFrameTimer++;

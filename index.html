@@ -42,7 +42,7 @@
         <span class="nav-title">居家健身游戏平台</span>
       </div>
       <div class="nav-status">
-        <span class="nav-badge nav-badge-glow">🔥 READY</span>
+        <span class="nav-badge nav-badge-glow" id="kcal-badge" style="cursor:pointer" title="点击查看数据报告">🔥 <span id="totalKcal">0.0</span> kcal</span>
       </div>
     </div>
   </header>
@@ -133,17 +133,8 @@
         </div>
       </div>
 
-      <!-- 操作提示 & 统计预览 -->
-      <div class="info-panel">
-        <div class="info-panel-header">
-          <span>📋 操作预览</span>
-        </div>
-        <div class="info-panel-content" id="infoPanelContent">
-          <div class="key-row"><kbd>空格 / ↑</kbd> <span>跳跃越障</span></div>
-          <div class="key-row"><kbd>↓</kbd> <span>深蹲滑铲</span></div>
-          <div class="key-row"><kbd>Shift</kbd> <span>加速奔跑</span></div>
-        </div>
-      </div>
+      <!-- 游戏操作浮窗提示 -->
+      <div id="game-tooltip" style="display:none;"></div>
 
       <!-- 开始按钮 -->
       <button id="btnPlay" class="btn-start">
@@ -241,11 +232,6 @@
 
     <div class="hud">
       <div class="hud-left">
-        <div class="hp-row">
-          <span class="hud-label">HP</span>
-          <div class="hp-bar"><div class="hp-fill" id="hp0" style="width:100%"></div></div>
-          <span class="hp-text" id="hpText0">100%</span>
-        </div>
         <div>
           <span class="hud-label">距离</span>
           <span class="hud-value" id="dist0">0</span>
@@ -269,11 +255,6 @@
       </div>
     </div>
     <div class="feedback" id="fb0"></div>
-    <div class="rules-bar" id="rules0">
-      <div class="title">⌨️ 地铁跑酷 · 键盘操作</div>
-      <div class="text">空格/↑=跳跃 · ↓=滑铲 · Shift=加速 · X=冲刺 · ESC=暂停</div>
-    </div>
-    <button class="bt-quit" id="quitBtn0">✕ 退出</button>
   </div>
 </div>
 
@@ -298,11 +279,6 @@
 
     <div class="hud">
       <div class="hud-left">
-        <div class="hp-row">
-          <span class="hud-label">HP</span>
-          <div class="hp-bar"><div class="hp-fill" id="hp1" style="width:100%"></div></div>
-          <span class="hp-text" id="hpText1">100%</span>
-        </div>
         <div>
           <span class="hud-label">得分</span>
           <span class="hud-value" id="score1">0</span>
@@ -326,11 +302,6 @@
       </div>
     </div>
     <div class="feedback" id="fb1"></div>
-    <div class="rules-bar" id="rules1">
-      <div class="title">⌨️ 科比投篮挑战 · 键盘操作</div>
-      <div class="text">WASD=移动 · 空格=跳跃 · J=蓄力投篮 · E=捡球 · K=扣篮 · Q=抢断 · X=冲刺 · 按H键=操作面板</div>
-    </div>
-    <button class="bt-quit" id="quitBtn1">✕ 退出</button>
 
     <!-- 3D 篮球游戏 UI 元素 -->
     <div id="dialog-box" style="display:none;">
@@ -352,19 +323,6 @@
       <video id="dunk-video" src="games/hoop/video/koulandonghua.mp4" muted playsinline></video>
     </div>
 
-    <!-- 冲刺技能 HUD -->
-    <div id="skill-dash-hud">
-      <div class="skill-icon-box" id="dash-icon-box">
-        <svg class="dash-svg" viewBox="0 0 24 24">
-          <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"></path>
-        </svg>
-        <div id="dash-cooldown-mask"></div>
-      </div>
-      <div class="skill-info">
-        <span class="skill-key">[X] SPRINT</span>
-        <span id="dash-timer-text">READY</span>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -384,9 +342,7 @@
       <div>📜 滚轮向上 → 回看对话</div>
       <div>⏭️ Tab → 快进对话</div>
       <div>💾 右键/Esc → 菜单/存档</div>
-    </div>
-    <button class="bt-quit" id="quitBtn2">✕ 退出</button>
-  </div>
+    </div>  </div>
 </div>
 
 <!-- ============================================================ -->
@@ -396,45 +352,13 @@
   <div class="game-area">
     <canvas id="gameCanvas3"></canvas>
 
-    <div class="action-guide" id="actionGuide3">
-      <div class="action-guide-title">🎮 手势操作 · 体感方块</div>
-      <div class="action-guide-item"><span class="ag-key">举起左臂</span><span class="ag-arrow">→</span><span class="ag-effect">方块左移</span></div>
-      <div class="action-guide-item"><span class="ag-key">举起右臂</span><span class="ag-arrow">→</span><span class="ag-effect">方块右移</span></div>
-      <div class="action-guide-item"><span class="ag-key">双臂交叉</span><span class="ag-arrow">→</span><span class="ag-effect">旋转方块</span></div>
-      <div class="action-guide-item"><span class="ag-key">点头</span><span class="ag-arrow">→</span><span class="ag-effect">加速下落</span></div>
-      <div class="action-guide-item ag-hint">键盘备用: ← → ↑ ↓ 空格</div>
-    </div>
-
     <div class="hud">
       <div class="hud-left">
-        <div class="hp-row">
-          <span class="hud-label">HP</span>
-          <div class="hp-bar"><div class="hp-fill" id="hp3" style="width:100%"></div></div>
-          <span class="hp-text" id="hpText3">100%</span>
-        </div>
-        <div>
-          <span class="hud-label">得分</span>
-          <span class="hud-value" id="score3">0</span>
-        </div>
-        <div>
-          <span class="hud-label">消行</span>
-          <span class="hud-value" id="lines3">0</span>
-        </div>
+        <div><span class="hud-label">得分</span><span class="hud-value" id="score3">0</span></div>
+        <div><span class="hud-label">消行</span><span class="hud-value" id="lines3">0</span></div>
       </div>
       <div class="hud-center">
-        <div class="action-hint" id="hint3">🧩 体感方块 · 手势控制</div>
-        <div class="countdown" id="timer3">120</div>
-      </div>
-      <div class="hud-right">
-        <div>
-          <span class="hud-label">等级</span>
-          <span class="hud-value" id="level3">1</span>
-        </div>
-        <div>
-          <span class="hud-label">🔥 消耗</span>
-          <span class="hud-value" id="cal3">0</span>
-          <span style="font-size:.65rem;color:#8888bb"> kcal</span>
-        </div>
+        <div class="countdown" id="timer3">∞</div>
       </div>
     </div>
     <div class="feedback" id="fb3"></div>
@@ -448,11 +372,6 @@
       </div>
     </div>
 
-    <div class="rules-bar" id="rules3">
-      <div class="title">🎮 体感方块 · 手势控制</div>
-      <div class="text">举起左臂=左移 · 举起右臂=右移 · 双臂交叉=旋转 · 点头=加速下落 · ESC=暂停</div>
-    </div>
-    <button class="bt-quit" id="quitBtn3">✕ 退出</button>
   </div>
 </div>
 
@@ -549,6 +468,7 @@
 <!-- ============================================================ -->
 <!-- 应用模块 (按依赖顺序加载) -->
 <!-- ============================================================ -->
+<script src="js/ai-report.js"></script>
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/state.js"></script>
@@ -584,6 +504,36 @@
     <canvas id="cam-canvas-side" style="display:none"></canvas>
   </div>
 </div>
+<!-- 全局退出确认遮罩 (ESC暂停时显示) -->
+<div id="quit-overlay" style="display:none;">
+  <button id="quit-overlay-btn">✕ 退出游戏</button>
+</div>
+
+<!-- 卡路里报告面板 -->
+<div id="kcal-report-panel" style="display:none;">
+  <div class="kcal-report-header">
+    <span>📊 卡路里数据报告</span>
+    <div style="display:flex;gap:8px;">
+      <button id="kcal-export-btn" class="kcal-close-btn" title="导出CSV">📥</button>
+      <button id="kcal-report-close" class="kcal-close-btn">✕</button>
+    </div>
+  </div>
+  <div class="kcal-report-body">
+    <div class="kcal-summary-row" id="kcal-summary"></div>
+    <canvas id="kcal-chart" width="600" height="240"></canvas>
+    <div id="kcal-ai-box" style="margin-bottom:14px;">
+      <div style="display:flex;gap:8px;">
+        <input id="kcal-ai-input" placeholder="问问AI教练..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:0.8rem;outline:none;">
+        <button id="kcal-ai-send" style="background:#a855f7;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:0.8rem;">发送</button>
+      </div>
+      <div id="kcal-ai-reply" style="margin-top:8px;color:#86efac;font-size:0.8rem;line-height:1.6;min-height:20px;"></div>
+    </div>
+    <div class="kcal-table-wrap">
+      <table id="kcal-table"><thead><tr><th>日期</th><th>游戏</th><th>消耗(kcal)</th><th>时长(分)</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
 <!-- 全局体感管理器（面板 HTML 之后加载，确保 #cam-video 已存在） -->
 <script src="js/MediaPipeManager.js"></script>
 </body>

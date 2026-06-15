@@ -1,25 +1,25 @@
 // ====================================================================
-// MediaPipeManager.js — 全局体感管理器（订阅/退订模式）
-// 整个应用只有一个 video + 一个 Pose 实例，各场景通过 subscribe 获取数据
+// MediaPipeManager.js — 全局体感管理器
+// 单例 Pose + 本地摄像头 + 订阅/退订模式
 // ====================================================================
 
 // 手机陀螺仪 WebSocket 客户端
 window._phoneIMU = { beta: 0, gamma: 0, alpha: 0, ts: 0 };
 (function connectPhoneIMU() {
     try {
-        var ws = new WebSocket('ws://' + window.location.hostname + ':8081');
+        var ws = new WebSocket('ws://' + window.location.hostname + ':8080');
         ws.onmessage = function (e) {
             var d = JSON.parse(e.data);
             if (d.type === 'leg_imu') window._phoneIMU = d;
         };
         ws.onclose = function () { setTimeout(connectPhoneIMU, 3000); };
-        ws.onerror = function () {}; // 静默，手机没连也不报错
+        ws.onerror = function () {};
     } catch (e) {}
 })();
 
 class MediaPipeManager {
     constructor() {
-        // 处理用的隐藏 video（给 MediaPipe 喂帧）
+        // 隐藏 video（MediaPipe 处理用）
         this.videoElement = document.createElement('video');
         this.videoElement.setAttribute('playsinline', '');
         this.videoElement.setAttribute('autoplay', '');
@@ -27,12 +27,12 @@ class MediaPipeManager {
         this.videoElement.style.display = 'none';
         document.body.appendChild(this.videoElement);
 
-        // 显示用的 video — 延迟到 initCamera 再查找（确保 DOM 已就绪）
         this.displayVideo = null;
-
         this.listeners = [];
         this.isReady = false;
         this.stream = null;
+        this._dualMode = false;
+        this._lastPoseLandmarks = null;
 
         this.initCamera();
     }
@@ -48,115 +48,54 @@ class MediaPipeManager {
             document.body.appendChild(this.displayVideo);
         }
 
-        var ipCamUrl = 'http://10.124.139.147:8080';
-
-        // === 主方案：本地电脑摄像头 ===
-        var localSuccess = await this._tryLocalCamera();
-        if (localSuccess) {
-            console.log('[MediaPipeManager] ✅ 本地摄像头已连接');
-            this.initPose();
-            // 本地成功后再尝试加载 IP 摄像头（面板展示用）
-            this._tryIPCamera(ipCamUrl);
-            return;
-        }
-
-        // === 备选方案：外接 IP 摄像头 ===
-        console.log('[MediaPipeManager] 本地摄像头不可用，尝试外接...');
-        var ipSuccess = await this._tryIPCamera(ipCamUrl);
-        if (ipSuccess) {
-            console.log('[MediaPipeManager] ✅ 外接摄像头已连接');
-            this.initPose();
-            return;
-        }
-
-        console.warn('[MediaPipeManager] ❌ 所有摄像头方案均失败');
+        var ok = await this._tryLocalCamera();
+        if (ok) { console.log('[MediaPipeManager] 本地摄像头已连接'); this.initPose(); }
+        else { console.warn('[MediaPipeManager] 本地摄像头不可用'); }
     }
 
-    async _tryIPCamera(url) {
-        console.log('[MediaPipeManager] 尝试连接外接摄像头:', url);
-        return new Promise((resolve) => {
-            // 方案 A：video 直连 MJPEG 流
-            var video = document.createElement('video');
-            video.setAttribute('playsinline', '');
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.crossOrigin = 'anonymous';
-            video.src = url;
-
-            var resolved = false;
-            var done = function (ok) { if (!resolved) { resolved = true; resolve(ok); } };
-
-            video.onloadedmetadata = function () {
-                console.log('[MediaPipeManager] IP 摄像头 video 直连成功');
-                this.videoElement.srcObject = null;
-                // 用 canvas 桥接：定时抓 video 帧 → canvas → MediaPipe 处理
-                this._setupIPCamBridge(video);
-                done(true);
-            }.bind(this);
-
-            video.onerror = function () {
-                console.log('[MediaPipeManager] video 直连失败，尝试 snapshot 轮询...');
-                // 方案 B：snapshot 轮询
-                this._trySnapshotPolling(url, done);
-            }.bind(this);
-
-            video.play().catch(function () {});
-            // 超时：2 秒内连不上就走 snapshot
-            setTimeout(function () { if (!resolved) video.onerror(); }, 2000);
-        });
+    async _tryLocalCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, frameRate: 30 } });
+            this.videoElement.srcObject = this.stream;
+            await this.videoElement.play();
+            this.displayVideo.srcObject = this.stream;
+            await this.displayVideo.play();
+            return true;
+        } catch (e) { console.warn('[MediaPipeManager] 摄像头错误:', e.message); return false; }
     }
 
-    _setupIPCamBridge(sourceVideo) {
-        // 隐藏 video 播 IP 流；MediaPipe 处理帧；display video 做镜像
-        sourceVideo.style.display = 'none';
-        document.body.appendChild(sourceVideo);
-        this._ipSourceVideo = sourceVideo;
-        this.videoElement = sourceVideo;
-        this.displayVideo.srcObject = null;
-        this.displayVideo.style.display = 'none'; // 隐藏原 video，改用 canvas 显示
-        this._useIPCamCanvas = true;
-    }
+    initPose() {
+        if (typeof Pose === 'undefined') { console.warn('[MediaPipeManager] Pose 未加载'); return; }
 
-    _trySnapshotPolling(url, done) {
-        var canvas = document.createElement('canvas');
-        canvas.width = 640; canvas.height = 480;
-        var ctx = canvas.getContext('2d');
-        var img = new Image();
-        img.crossOrigin = 'anonymous';
-        var attempts = 0;
         var self = this;
+        this.pose = new Pose({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/' + f; } });
+        this.pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6, selfieMode: true });
 
-        // 尝试常见 snapshot 路径
-        var paths = [url, url + '/shot.jpg', url + '/snapshot', url + '/photo.jpg', url + '/capture'];
-        var pathIdx = 0;
+        this.pose.onResults(function (results) {
+            if (!results.poseLandmarks) return;
+            self._lastPoseLandmarks = results.poseLandmarks;
+            self._refreshPanel();
+            self.listeners.forEach(function (cb) { if (typeof cb === 'function') cb(results); });
+        });
 
-        function tryNext() {
-            if (pathIdx >= paths.length) { console.warn('[MediaPipeManager] 所有 snapshot 路径均失败'); done(false); return; }
-            var p = paths[pathIdx];
-            console.log('[MediaPipeManager] 尝试 snapshot:', p);
-            img.onload = function () {
-                console.log('[MediaPipeManager] ✅ snapshot 轮询成功:', p);
-                ctx.drawImage(img, 0, 0, 640, 480);
-                // 用 canvas 作为 video 替代：每 100ms 抓一帧
-                self._ipSnapshotCanvas = canvas;
-                self._ipSnapshotPath = p;
-                self._ipSnapshotImg = img;
-                self._useIPCamCanvas = true;
-                // 伪装成 video：MediaPipe 可以从 canvas 获取帧
-                // 我们需要修改帧循环让 MediaPipe 从 canvas 读取
-                self.videoElement = { readyState: 2, videoWidth: 640, videoHeight: 480, width: 640, height: 480 };
-                self._ipPolling = true;
-                self._doSnapshotPoll();
-                done(true);
+        if (typeof Camera !== 'undefined' && this.videoElement.readyState !== undefined) {
+            this.camera = new Camera(this.videoElement, {
+                onFrame: async function () { await self.pose.send({ image: self.videoElement }); },
+                width: 640, height: 480
+            });
+            this.camera.start().then(function () { self.isReady = true; });
+        } else {
+            var loop = async function () {
+                if (self.videoElement.readyState >= 2) await self.pose.send({ image: self.videoElement });
+                requestAnimationFrame(loop);
             };
-            img.onerror = function () { pathIdx++; tryNext(); };
-            img.src = p;
+            loop();
+            this.isReady = true;
         }
-        tryNext();
     }
 
     _refreshPanel() {
-        // ---- 本地摄像头面板（始终显示） ----
+        // ---- 本地摄像头面板 ----
         var canvas = document.getElementById('cam-canvas');
         if (canvas) {
             var ctx = canvas.getContext('2d');
@@ -170,19 +109,19 @@ class MediaPipeManager {
                 ctx.restore();
             }
 
-            var landmarks = this._lastPoseLandmarks;
-            if (landmarks) {
+            if (this._lastPoseLandmarks) {
+                var lm = this._lastPoseLandmarks;
                 var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
                 ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 2;
                 BONES.forEach(function (b) {
-                    var a = landmarks[b[0]], bb = landmarks[b[1]];
+                    var a = lm[b[0]], bb = lm[b[1]];
                     if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
                         ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(bb.x * w, bb.y * h); ctx.stroke();
                     }
                 });
-                landmarks.forEach(function (lm, i) {
-                    if (lm.visibility < 0.4) return;
-                    var x = lm.x * w, y = lm.y * h;
+                lm.forEach(function (p, i) {
+                    if (p.visibility < 0.4) return;
+                    var x = p.x * w, y = p.y * h;
                     var isLeg = i >= 23, isHand = i >= 15 && i <= 22;
                     ctx.beginPath(); ctx.arc(x, y, isHand ? 5 : (isLeg ? 4 : 2.5), 0, 2 * Math.PI);
                     ctx.fillStyle = isHand ? '#FF3333' : (isLeg ? '#33FF33' : '#00FF00'); ctx.fill();
@@ -191,132 +130,15 @@ class MediaPipeManager {
             }
         }
 
-        // ---- IP 摄像头面板（双机位模式下独立显示） ----
+        // ---- 侧摄像头面板 ----
         var sideCanvas = document.getElementById('cam-canvas-side');
-        if (sideCanvas && this._dualMode && this._ipSnapshotCanvas) {
-            sideCanvas.style.display = 'block';
-            var sctx = sideCanvas.getContext('2d');
-            var sw = 640, sh = 480;
-            sideCanvas.width = sw; sideCanvas.height = sh;
-            sctx.clearRect(0, 0, sw, sh);
-            sctx.drawImage(this._ipSnapshotCanvas, 0, 0, sw, sh);
-        } else if (sideCanvas) {
-            sideCanvas.style.display = 'none';
-        }
+        if (sideCanvas) { sideCanvas.style.display = this._dualMode ? 'block' : 'none'; }
     }
 
-    _doSnapshotPoll() {
-        if (!this._ipPolling) return;
-        var self = this;
-        var img = this._ipSnapshotImg;
-        img.src = this._ipSnapshotPath + '?t=' + Date.now();
-        img.onload = function () {
-            self._ipSnapshotCanvas.getContext('2d').drawImage(img, 0, 0, 640, 480);
-            self._refreshPanel();
-            setTimeout(function () { self._doSnapshotPoll(); }, 100);
-        };
-    }
-
-    async _tryLocalCamera() {
-        try {
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, frameRate: 30 }
-            });
-            this.videoElement.srcObject = this.stream;
-            await this.videoElement.play();
-            this.displayVideo.srcObject = this.stream;
-            await this.displayVideo.play();
-            return true;
-        } catch (err) {
-            console.warn('[MediaPipeManager] 本地摄像头不可用:', err.message);
-            return false;
-        }
-    }
-
-    initPose() {
-        if (typeof Pose === 'undefined') {
-            console.warn('[MediaPipeManager] MediaPipe Pose 未加载');
-            return;
-        }
-
-        this.pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-        });
-
-        this.pose.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            enableSegmentation: false,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6,
-            selfieMode: true  // 前置自拍镜头，底层数据自动左右翻转
-        });
-
-          // 全局唯一的原生回调 — 广播给订阅者 + 刷新显示
-        var self = this;
-        this.pose.onResults((results) => {
-            if (!results.poseLandmarks) return;
-
-            // 缓存原始数据（不做翻转，广播和骨骼使用原始数据）
-            self._lastPoseLandmarks = results.poseLandmarks;
-            // 本地摄像头模式：更新 canvas
-            if (!self._ipPolling) self._refreshPanel();
-            // 广播原始数据给所有外部订阅者
-            self.listeners.forEach(callback => { if (typeof callback === 'function') callback(results); });
-        });
-
-        // 帧循环：IP 摄像头用 polling canvas，本地摄像头用 Camera 工具类
-        var self = this;
-        if (this._ipPolling) {
-            // IP 摄像头 snapshot 模式：从 canvas 喂帧给 MediaPipe
-            var ipProcess = async function () {
-                if (self._ipSnapshotCanvas) {
-                    await self.pose.send({ image: self._ipSnapshotCanvas });
-                }
-                requestAnimationFrame(ipProcess);
-            };
-            ipProcess();
-            this.isReady = true;
-            console.log('[MediaPipeManager] 体感就绪 (IP 摄像头轮询)');
-        } else if (typeof Camera !== 'undefined' && this.videoElement.readyState !== undefined) {
-            this.camera = new Camera(this.videoElement, {
-                onFrame: async () => { await this.pose.send({ image: this.videoElement }); },
-                width: 640, height: 480
-            });
-            this.camera.start().then(() => { this.isReady = true; console.log('[MediaPipeManager] 体感就绪'); });
-        } else {
-            var processFrame = async function () {
-                if (self.videoElement.readyState >= 2) { await self.pose.send({ image: self.videoElement }); }
-                requestAnimationFrame(processFrame);
-            };
-            processFrame();
-            this.isReady = true;
-            console.log('[MediaPipeManager] 体感就绪 (fallback 帧循环)');
-        }
-    }
-
-    // ---- 对外接口 ----
-
-    /** 订阅姿态数据。callback 接收 { poseLandmarks, poseWorldLandmarks } */
-    subscribe(callback) {
-        if (!this.listeners.includes(callback)) {
-            this.listeners.push(callback);
-            console.log('[MediaPipeManager] 订阅者 +1, 当前:', this.listeners.length);
-        }
-    }
-
-    /** 取消订阅（切场景时必须调用，防止内存泄漏） */
-    unsubscribe(callback) {
-        this.listeners = this.listeners.filter(cb => cb !== callback);
-        console.log('[MediaPipeManager] 订阅者 -1, 当前:', this.listeners.length);
-    }
-
-    /** 获取摄像头流引用（供 canvas 预览等使用） */
+    subscribe(cb) { if (!this.listeners.includes(cb)) { this.listeners.push(cb); } }
+    unsubscribe(cb) { this.listeners = this.listeners.filter(function (x) { return x !== cb; }); }
     getStream() { return this.stream; }
-
-    /** 获取 video 元素 */
     getVideoElement() { return this.videoElement; }
 }
 
-// 挂载到全局 — 整个应用唯一实例
 window.mpManager = new MediaPipeManager();

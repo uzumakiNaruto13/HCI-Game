@@ -103,12 +103,13 @@ function updateLobbyUI(gameIdx) {
     heroIconWrap.style.boxShadow = '0 0 40px rgba(0,0,0,0.5), 0 0 25px ' + meta.heroGlowColor.replace('0.5', '0.2') + ', inset 0 0 40px rgba(0,0,0,0.4)';
   }
 
-  // 更新操作预览面板
-  var infoContent = document.getElementById('infoPanelContent');
-  if (infoContent && meta.keys) {
-    infoContent.innerHTML = meta.keys.map(function (k) {
-      return '<div class="key-row"><kbd>' + k.key + '</kbd> <span>' + k.action + '</span></div>';
-    }).join('');
+  // 操作提示改为 hover 浮窗
+  var tooltip = document.getElementById('game-tooltip');
+  if (tooltip && meta.keys) {
+    tooltip.innerHTML = '<div class="tip-title">' + meta.name + '</div>' +
+      meta.keys.map(function (k) {
+        return '<div class="tip-row"><kbd>' + k.key + '</kbd><span>' + k.action + '</span></div>';
+      }).join('');
   }
 }
 
@@ -117,11 +118,26 @@ function initSystem() {
   console.log('[系统] 初始化 · 科幻游戏UI模式');
 
   // === 游戏选择卡片 (右侧面板) ===
+  var tooltip = document.getElementById('game-tooltip');
   document.querySelectorAll('.gsc').forEach(function (card) {
     card.addEventListener('click', function () {
       var gameIdx = parseInt(this.dataset.game);
       STATE.gameMode = gameIdx;
       updateLobbyUI(gameIdx);
+    });
+    // hover 浮窗
+    card.addEventListener('mouseenter', function (e) {
+      var idx = parseInt(this.dataset.game);
+      updateLobbyUI(idx); // 更新浮窗内容
+      if (tooltip) {
+        tooltip.style.display = 'block';
+        var rect = this.getBoundingClientRect();
+        tooltip.style.left = (rect.right + 12) + 'px';
+        tooltip.style.top = rect.top + 'px';
+      }
+    });
+    card.addEventListener('mouseleave', function () {
+      if (tooltip) tooltip.style.display = 'none';
     });
   });
 
@@ -142,15 +158,13 @@ function initSystem() {
     });
   }
 
-  // === 退出按钮 ===
-  var quitBtn0 = document.getElementById('quitBtn0');
-  var quitBtn1 = document.getElementById('quitBtn1');
-  var quitBtn2 = document.getElementById('quitBtn2');
-  var quitBtn3 = document.getElementById('quitBtn3');
-  if (quitBtn0) quitBtn0.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
-  if (quitBtn1) quitBtn1.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
-  if (quitBtn2) quitBtn2.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
-  if (quitBtn3) quitBtn3.addEventListener('click', function () { if (currentGame) currentGame.endGame(); });
+  // === 退出按钮 (ESC暂停时屏幕中央显示) ===
+  var quitOverlayBtn = document.getElementById('quit-overlay-btn');
+  if (quitOverlayBtn) quitOverlayBtn.addEventListener('click', function () {
+    if (currentGame) { currentGame.endGame(); }
+    var qo = document.getElementById('quit-overlay');
+    if (qo) qo.style.display = 'none';
+  });
 
   // === 结算页面按钮 ===
   var btnRetry = document.getElementById('btnRetry');
@@ -180,18 +194,18 @@ function initSystem() {
       e.preventDefault();
       if (currentGame && currentGame._paused !== undefined) {
         var guide = document.getElementById('actionGuide' + STATE.gameMode);
+        var quitOverlay = document.getElementById('quit-overlay');
         if (currentGame._paused) {
-          // 恢复游戏
           currentGame._paused = false;
           if (guide) guide.classList.add('hidden');
-          // 重新启动倒计时
+          if (quitOverlay) quitOverlay.style.display = 'none';
           currentGame.beginCountdown();
           currentGame.startLoop();
         } else if (currentGame._running) {
-          // 暂停游戏
           currentGame._paused = true;
           currentGame._running = false;
           if (guide) guide.classList.remove('hidden');
+          if (quitOverlay) quitOverlay.style.display = 'flex';
           // 清除倒计时
           if (STATE.gameTimer) {
             clearInterval(STATE.gameTimer);
@@ -276,6 +290,25 @@ function initSystem() {
     });
 
     window.addEventListener('mouseup', function () { isDragging = false; isResizing = false; });
+
+    // === 侧摄像头面板拖拽 ===
+    var sideCanvas = document.getElementById('cam-canvas-side');
+    if (sideCanvas) {
+      sideCanvas.style.cursor = 'move';
+      sideCanvas.addEventListener('mousedown', function (e) {
+        var sx = e.clientX - sideCanvas.offsetLeft;
+        var sy = e.clientY - sideCanvas.offsetTop;
+        function onMove(ev) {
+          sideCanvas.style.left = (ev.clientX - sx) + 'px';
+          sideCanvas.style.top = (ev.clientY - sy) + 'px';
+          sideCanvas.style.right = 'auto'; sideCanvas.style.bottom = 'auto';
+        }
+        function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        e.preventDefault();
+      });
+    }
   })();
 
   // === 大厅手势：手部上下划切换游戏 + 点头确认进入 ===
@@ -391,6 +424,11 @@ function initSystem() {
   }
 
   // 初始状态
+  // === 独立卡路里追踪器 (localStorage 持久化) ===
+  window._totalKcal = parseFloat(localStorage.getItem('hcigame_total_kcal') || '0');
+  var totalEl = document.getElementById('totalKcal');
+  if (totalEl) totalEl.textContent = fmt(window._totalKcal, 1);
+
   updateLobbyUI(STATE.gameMode);
 
   console.log('[系统] 初始化完成 · 科幻游戏UI模式 · 等待用户选择游戏');

@@ -67,6 +67,17 @@ function showResults() {
   $('rsScore').textContent = Math.round(stats.score);
   $('rsActions').textContent = stats.actions;
   $('rsCal').textContent = fmt(stats.cal, 1);
+  // 累计到总卡路里追踪器
+  if (window._totalKcal === undefined) window._totalKcal = parseFloat(localStorage.getItem('hcigame_total_kcal') || '0');
+  window._totalKcal += stats.cal;
+  localStorage.setItem('hcigame_total_kcal', window._totalKcal.toFixed(1));
+  var totalEl = document.getElementById('totalKcal');
+  if (totalEl) totalEl.textContent = fmt(window._totalKcal, 1);
+  // AI 报告：记录本次会话
+  if (typeof AIReport !== 'undefined') {
+    var playSec = currentGame && currentGame._playStartTime ? Math.round((Date.now() - currentGame._playStartTime) / 1000) : 0;
+    AIReport.logSession(gameNames[STATE.gameMode], stats.cal, Math.round(stats.score), playSec);
+  }
   $('rsCombo').textContent = stats.maxCombo;
 
   var labels = ['跳跃', '深蹲', '出拳', '投篮', '跑步', '左移', '右移', '旋转'];

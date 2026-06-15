@@ -1027,3 +1027,81 @@ h2.grad { font-size: 1.4rem; margin-bottom: 0.5rem; }
   .nav-badge { font-size: 0.6rem; padding: 3px 8px; }
   .gg-dialog-box { padding: 1rem 1rem 0.8rem; min-height: 150px; }
 }
+
+/* === 游戏操作浮窗提示 === */
+#game-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: rgba(10, 8, 30, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 12px;
+  padding: 14px 18px;
+  pointer-events: none;
+  max-width: 280px;
+}
+#game-tooltip .tip-title { color: #a855f7; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; }
+#game-tooltip .tip-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+#game-tooltip .tip-row kbd {
+  background: rgba(168,85,247,0.2); color: #c4b5fd;
+  padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;
+  white-space: nowrap; min-width: 40px; text-align: center;
+}
+#game-tooltip .tip-row span { color: #94a3b8; font-size: 0.78rem; }
+
+/* === 卡路里报告面板 === */
+#kcal-report-panel {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 680px; max-width: 95vw; max-height: 85vh;
+  background: rgba(10, 8, 30, 0.97);
+  border: 2px solid #a855f7;
+  border-radius: 16px;
+  z-index: 10001;
+  box-shadow: 0 0 40px rgba(168,85,247,0.4);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.kcal-report-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  background: rgba(168,85,247,0.15);
+  border-bottom: 1px solid rgba(168,85,247,0.3);
+  color: #e2e8f0; font-size: 1.1rem; font-weight: bold;
+}
+.kcal-close-btn {
+  background: none; border: none; color: #a0aec0; font-size: 1.3rem;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.kcal-close-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.kcal-report-body {
+  padding: 20px; overflow-y: auto; flex: 1;
+}
+.kcal-summary-row {
+  display: flex; gap: 16px; margin-bottom: 20px;
+}
+.kcal-summary-card {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 14px; text-align: center;
+}
+.kcal-summary-card .val { font-size: 1.6rem; font-weight: bold; color: #fbbf24; }
+.kcal-summary-card .lbl { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+#kcal-chart {
+  width: 100%; height: 240px;
+  background: rgba(0,0,0,0.3); border-radius: 10px;
+  margin-bottom: 16px;
+}
+.kcal-table-wrap { max-height: 200px; overflow-y: auto; margin-bottom: 16px; }
+#kcal-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; color: #cbd5e1; }
+#kcal-table th { background: rgba(168,85,247,0.2); padding: 8px; text-align: left; }
+#kcal-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.kcal-ai-insight {
+  background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 10px; padding: 14px; color: #86efac; font-size: 0.85rem; line-height: 1.6;
+}
+
+#quit-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;}
+#quit-overlay-btn{background:#dc2626;color:#fff;border:none;font-size:1.2rem;padding:14px 40px;border-radius:12px;cursor:pointer;font-weight:bold;}
+#quit-overlay-btn:hover{background:#ef4444;}
+

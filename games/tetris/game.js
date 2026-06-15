@@ -87,8 +87,8 @@ TetrisGame.prototype.setup = function () {
   var self = this;
 
   // 动态计算格子大小 (保持比例放大)
-  var topMargin = 80;   // 顶部 HUD 区域
-  var bottomMargin = 120; // 底部手势提示区域
+  var topMargin = 60;
+  var bottomMargin = 60;
   var availableHeight = window.innerHeight - topMargin - bottomMargin;
   var availableWidth = window.innerWidth - 40; // 左右留 20px 边距
 
@@ -160,10 +160,6 @@ TetrisGame.prototype.setup = function () {
   this.nodState = 0;
   this.nodCount = 0;
   this.nodTimer = 0;
-
-  // 隐藏操作指南
-  var guide = document.getElementById('actionGuide3');
-  if (guide) guide.classList.add('hidden');
 
   // 绑定键盘
   this._keydownHandler = function (e) {
@@ -371,8 +367,14 @@ TetrisGame.prototype.render = function () {
   // 绘制下一个方块预览
   this._drawNextPreview(ctx);
 
-  // 绘制手势提示
-  this._drawGestureHint(ctx);
+  // 手势提示 (居中上方)
+  if (this.gestureHint) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = 'bold 14px "Microsoft YaHei", Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.gestureHint, this.canvas.width / 2, this.gridOffsetY - 10);
+    ctx.textAlign = 'left';
+  }
 
   // 绘制特效
   this._drawEffects(ctx, ox, oy, cs);
@@ -574,15 +576,6 @@ TetrisGame.prototype._drawNextPreview = function (ctx) {
       }
     }
   }
-  ctx.textAlign = 'left';
-};
-
-TetrisGame.prototype._drawGestureHint = function (ctx) {
-  if (!this.gestureHint) return;
-  ctx.fillStyle = 'rgba(0, 212, 255, 0.9)';
-  ctx.font = 'bold 16px Microsoft YaHei, Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(this.gestureHint, this.canvas.width / 2, this.gridOffsetY - 10);
   ctx.textAlign = 'left';
 };
 
@@ -1048,8 +1041,8 @@ TetrisGame.prototype._recalcLayout = function () {
   this.canvas.height = window.innerHeight;
 
   // 动态计算格子大小 (保持比例放大)
-  var topMargin = 80;   // 顶部 HUD 区域
-  var bottomMargin = 120; // 底部手势提示区域
+  var topMargin = 60;
+  var bottomMargin = 60;
   var availableHeight = window.innerHeight - topMargin - bottomMargin;
   var availableWidth = window.innerWidth - 40; // 左右留 20px 边距
 
@@ -1131,34 +1124,12 @@ TetrisGame.prototype._updateEffects = function () {
 // ====================================================================
 
 TetrisGame.prototype._syncHUD = function () {
-  var stats = STATE.gameStats;
-
-  // 分数
   var scoreEl = document.getElementById('score3');
   if (scoreEl) scoreEl.textContent = this.score;
-
-  // 消行数
   var linesEl = document.getElementById('lines3');
   if (linesEl) linesEl.textContent = this.linesCleared;
-
-  // 等级
-  var levelEl = document.getElementById('level3');
-  if (levelEl) levelEl.textContent = this.level;
-
-  // 倒计时（无限模式）
   var timerEl = document.getElementById('timer3');
   if (timerEl) timerEl.textContent = '∞';
-
-  // HP
-  UIManager.updateHP(stats.hp, 'hp3', 'hpText3');
-
-  // 卡路里
-  var calEl = document.getElementById('cal3');
-  if (calEl) calEl.textContent = fmt(stats.cal, 1);
-
-  // 手势提示
-  var hintEl = document.getElementById('hint3');
-  if (hintEl) hintEl.textContent = this.gestureHint || '🧩 体感方块 · 手势控制';
 };
 
 // ====================================================================

@@ -12,6 +12,7 @@ var GameEngine = function (gameId, mode) {
   this.frameCount = 0;
   this._readyActive = false;
   this._onReadyCallback = null;
+  this._playStartTime = 0; // 游戏开始时间戳
 
   // 速度控制
   this.speed = GAME_SPEED;
@@ -106,6 +107,7 @@ GameEngine.prototype.showReadyScreen = function (onReady) {
     if (!self._readyActive) return;
     if (e) e.preventDefault();
     self._readyActive = false;
+    self._playStartTime = Date.now(); // 记录开始时间
     var ov = document.getElementById('readyOverlay' + self.mode);
     if (ov) ov.remove();
     var g = document.getElementById('actionGuide' + self.mode);

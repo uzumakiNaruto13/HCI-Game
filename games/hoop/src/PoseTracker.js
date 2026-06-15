@@ -49,8 +49,8 @@ export class PoseTracker {
             this.sideWs.onmessage = function (e) {
                 var data = JSON.parse(e.data);
                 if (data.type === 'side_pose') {
-                    // 优先使用世界坐标，fallback 普通坐标
                     self2.sidePoseData = data.world_landmarks || data.landmarks;
+                    self2._drawSideCam(data);
                 }
             };
         } catch (e) { console.warn('侧摄像头 WebSocket 连接失败'); }
@@ -76,11 +76,44 @@ export class PoseTracker {
         };
         window.mpManager.subscribe(this._poseResultsHandler);
         game.poseDetector = window.mpManager.pose;
-        // 篮球场启用双机位拼盘模式
-        if (window.mpManager._ipSnapshotCanvas) {
-            window.mpManager._dualMode = true;
-        }
+        window.mpManager._dualMode = true;
         console.log('[PoseTracker] ✅ 已订阅 MediaPipeManager, 双机位:', window.mpManager._dualMode);
+    }
+
+    _drawSideCam(data) {
+        var canvas = document.getElementById('cam-canvas-side');
+        if (!canvas) return;
+        canvas.style.display = 'block';
+        var ctx = canvas.getContext('2d');
+        var w = 640, h = 480;
+
+        if (data.frame_jpg) {
+            if (!this._sideImg) this._sideImg = new Image();
+            var self = this;
+            this._sideImg.onload = function () {
+                canvas.width = w; canvas.height = h;
+                ctx.clearRect(0, 0, w, h);
+                ctx.drawImage(self._sideImg, 0, 0, w, h);
+
+                var lm = data.landmarks;
+                if (lm) {
+                    var BONES = [[11,12],[11,23],[12,24],[23,24],[12,14],[14,16],[11,13],[13,15],[24,26],[26,28],[23,25],[25,27],[0,11],[0,12]];
+                    ctx.strokeStyle = '#FF9933'; ctx.lineWidth = 2;
+                    BONES.forEach(function (b) {
+                        var a = lm[b[0]], bb = lm[b[1]];
+                        if (a && bb && a.visibility > 0.4 && bb.visibility > 0.4) {
+                            ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(bb.x * w, bb.y * h); ctx.stroke();
+                        }
+                    });
+                    lm.forEach(function (p) {
+                        if (p.visibility < 0.4) return;
+                        ctx.beginPath(); ctx.arc(p.x * w, p.y * h, 3, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#FF9933'; ctx.fill();
+                    });
+                }
+            };
+            this._sideImg.src = 'data:image/jpeg;base64,' + data.frame_jpg;
+        }
     }
 
     dispose() {
@@ -245,21 +278,7 @@ export class PoseTracker {
                     }
                 }
 
-                // 单摄像头 Z 轴精度不足做细粒度倾角检测，深度交互已移除。
-                // ==== 篮球绑定右手：持球时球跟随右手腕世界坐标 ====
-                if (game.ballAttached && game.basketballBody && game.lastPoseWorldData && game.playerModel) {
-                    var wl = game.lastPoseWorldData;
-                    var rWristW = wl[16], hipWorld = wl[23];
-                    if (rWristW && hipWorld) {
-                        var hW = new THREE.Vector3(hipWorld.x, hipWorld.y, -hipWorld.z);
-                        var wW = new THREE.Vector3(rWristW.x, rWristW.y, -rWristW.z);
-                        var handWorld = game.playerModel.position.clone().add(wW.sub(hW));
-                        game.basketballBody.position.copy(handWorld);
-                        game.basketballBody.velocity.set(0, 0, 0);
-                        game.basketballBody.angularVelocity.set(0, 0, 0);
-                        if (game.basketball) game.basketball.position.copy(handWorld);
-                    }
-                }
+                // 球同步已由 _syncBallToMediaPipeHand 处理（physics.step 之后）
 
                 // ==== 躯干前倾冲刺引擎：优先侧面摄像头，fallback 正面 ====
                 var sprintData = game.sidePoseData || game.lastPoseData;

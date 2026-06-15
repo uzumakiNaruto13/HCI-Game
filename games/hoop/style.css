@@ -430,6 +430,19 @@
   pointer-events: none;
 }
 
+#cam-canvas-side {
+  position: fixed;
+  bottom: 20px;
+  right: 350px;
+  width: 320px;
+  height: 240px;
+  z-index: 10000;
+  border: 3px solid #CC8800;
+  border-radius: 8px;
+  background: rgba(0,0,15,0.9);
+  object-fit: cover;
+}
+
 #cam-canvas {
   z-index: 2;
   pointer-events: none;
