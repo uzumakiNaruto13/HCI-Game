@@ -509,6 +509,8 @@
   <button id="quit-overlay-btn">✕ 退出游戏</button>
 </div>
 
+<!-- 卡路里报告面板遮罩锁 -->
+<div id="kcal-backdrop" style="display:none;" onclick="AIReport.close()"></div>
 <!-- 卡路里报告面板 -->
 <div id="kcal-report-panel" style="display:none;">
   <div class="kcal-report-header">
@@ -520,7 +522,16 @@
   </div>
   <div class="kcal-report-body">
     <div class="kcal-summary-row" id="kcal-summary"></div>
-    <canvas id="kcal-chart" width="600" height="240"></canvas>
+    <div class="kcal-settings-row" id="kcal-settings" style="margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;"></div>
+    <canvas id="kcal-chart" width="600" height="220"></canvas>
+    <div style="display:flex;gap:14px;margin-bottom:14px;align-items:center;">
+      <canvas id="kcal-pie" width="300" height="180" style="background:rgba(0,0,0,0.2);border-radius:8px;"></canvas>
+      <div style="flex:1;min-width:200px;">
+        <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:6px;">📊 游戏占比 (MET×体重×时长)</div>
+        <div style="color:#64748b;font-size:0.7rem;">🏃 地铁跑酷 MET=6.0 | 🏀 投篮 MET=7.5</div>
+        <div style="color:#64748b;font-size:0.7rem;">🎮 Galgame MET=1.5 | 🧩 方块 MET=3.5</div>
+      </div>
+    </div>
     <div id="kcal-ai-box" style="margin-bottom:14px;">
       <div style="display:flex;gap:8px;">
         <input id="kcal-ai-input" placeholder="问问AI教练..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:0.8rem;outline:none;">
