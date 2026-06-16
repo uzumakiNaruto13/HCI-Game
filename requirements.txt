@@ -1,0 +1,18 @@
+# 居家健身游戏平台 - Python 依赖
+# 安装: pip install -r requirements.txt
+
+# 体感追踪 (浏览器端通过 CDN 加载，此处为侧摄像头后端)
+mediapipe>=0.10.35
+opencv-contrib-python>=4.13.0
+
+# WebSocket 通信 (手机 IMU 中继 + 侧摄像头推送 + AI 服务)
+websockets>=13.0
+
+# AI 教练 HTTP 客户端
+aiohttp>=3.9
+
+# 环境变量管理
+python-dotenv>=1.0
+
+# 图像处理
+numpy>=1.24

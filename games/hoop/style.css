@@ -447,3 +447,8 @@
   z-index: 2;
   pointer-events: none;
 }
+
+#tip-float{position:fixed;bottom:80px;right:20px;width:120px;cursor:pointer;z-index:500;transform:rotate(-8deg);filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));transition:transform 0.8s ease-in,opacity 0.8s ease-in,right 0.8s ease-in;}
+#tip-float:hover{transform:rotate(0deg) scale(1.08);}
+#tip-float.dismissed{right:-160px;opacity:0;pointer-events:none;}
+

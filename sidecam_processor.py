@@ -7,7 +7,6 @@ import json
 import cv2
 import mediapipe as mp
 import websockets
-import numpy as np
 import base64
 
 IP_CAM_URL = "http://10.124.123.191:8080/video"
@@ -96,8 +95,9 @@ async def process_camera():
                     "visibility": lm.visibility or 1.0
                 })
             # 世界坐标 (新版 API 可能不提供)
-            world_list = []
+            world_list = None
             if result.pose_world_landmarks:
+                world_list = []
                 for lm in result.pose_world_landmarks[0]:
                     world_list.append({
                         "x": -lm.x, "y": lm.y, "z": lm.z,
@@ -107,7 +107,7 @@ async def process_camera():
             latest_landmarks = {
                 "type": "side_pose",
                 "landmarks": landmarks,
-                "world_landmarks": world_list if world_list else None,
+                "world_landmarks": world_list,
                 "frame": frame_count,
                 "frame_jpg": frame_jpg
             }

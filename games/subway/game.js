@@ -37,7 +37,6 @@ SubwaySurfGame.prototype.setup = function () {
   this._shiftHeld = false;
   this.sprintCooldown = 0;
   this.freezeTimer = 0;
-  this.hpMax = 7;
   this._paused = false;
   this.runFrames = [];
 
@@ -74,7 +73,6 @@ SubwaySurfGame.prototype.setup = function () {
   // 预加载 6 帧跑步精灵
   for (var fi = 1; fi <= 6; fi++) {
     var rimg = new Image();
-    rimg.onerror = function () { console.warn('[Subway] 跑步精灵加载失败:', this.src); };
     rimg.src = 'games/subway/pictures/' + fi + '.png';
     this.runFrames.push(rimg);
   }
@@ -84,7 +82,6 @@ SubwaySurfGame.prototype.setup = function () {
   var jumpFrameNums = [1, 4, 5, 6, 8];
   for (var fj = 0; fj < jumpFrameNums.length; fj++) {
     var jimg = new Image();
-    jimg.onerror = function () { console.warn('[Subway] 跳跃精灵加载失败:', this.src); };
     jimg.src = 'games/subway/pictures/Geometry Dash/jump_frame_' + jumpFrameNums[fj] + '-removebg-preview.png';
     this.jumpFrames.push(jimg);
   }
@@ -94,7 +91,6 @@ SubwaySurfGame.prototype.setup = function () {
   var dollarMap = ['invincible', 'heal', 'double', 'slow'];
   for (var di = 0; di < 4; di++) {
     var dimg = new Image();
-    dimg.onerror = function () { console.warn('[Subway] 特殊币图片加载失败:', this.src); };
     dimg.src = 'games/subway/pictures/dollar' + (di + 1) + '.png';
     this.dollarImgs[dollarMap[di]] = dimg;
   }
@@ -580,11 +576,6 @@ SubwaySurfGame.prototype._tutorialUpdate = function () {
       this._tutorialCoins.splice(i, 1);
     }
   }
-};
-
-// 绘制教程背景（墙壁 + 窗户 + 地板 + 跑步机），不含角色/金币/HUD
-SubwaySurfGame.prototype._renderTutorialBgOnly = function () {
-  this._renderTutorialSceneBg();
 };
 
 SubwaySurfGame.prototype._renderTutorialSceneBg = function () {

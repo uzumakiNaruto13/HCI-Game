@@ -78,6 +78,11 @@ function showResults() {
     var playSec = currentGame && currentGame._playStartTime ? Math.round((Date.now() - currentGame._playStartTime) / 1000) : 0;
     AIReport.logSession(gameNames[STATE.gameMode], stats.cal, Math.round(stats.score), playSec);
   }
+  // 同步到 FastAPI 后端
+  if (typeof API !== 'undefined' && API.isLoggedIn()) {
+    var playSec2 = currentGame && currentGame._playStartTime ? Math.round((Date.now() - currentGame._playStartTime) / 1000) : 0;
+    API.logSession(gameNames[STATE.gameMode], stats.cal, Math.round(stats.score), playSec2);
+  }
   $('rsCombo').textContent = stats.maxCombo;
 
   var labels = ['跳跃', '深蹲', '出拳', '投篮', '跑步', '左移', '右移', '旋转'];
@@ -118,6 +123,9 @@ function backToLobby() {
   var wrap = document.getElementById('laughVideoWrap');
   if (wrap) wrap.style.display = 'none';
   if (currentGame) { currentGame.running = false; currentGame = null; }
+  // 恢复摄像头面板
+  var hud = document.getElementById('cam-preview-hud');
+  if (hud) hud.style.display = '';
 }
 
 /** 启动游戏 */

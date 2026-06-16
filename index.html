@@ -41,8 +41,9 @@
         <span class="nav-logo">⚡</span>
         <span class="nav-title">居家健身游戏平台</span>
       </div>
-      <div class="nav-status">
+      <div class="nav-status" style="display:flex;align-items:center;gap:8px;">
         <span class="nav-badge nav-badge-glow" id="kcal-badge" style="cursor:pointer" title="点击查看数据报告">🔥 <span id="totalKcal">0.0</span> kcal</span>
+        <button id="btn-login" class="nav-badge" style="cursor:pointer;background:rgba(168,85,247,0.3);border:1px solid rgba(168,85,247,0.5);color:#c4b5fd;font-size:0.7rem;padding:4px 10px;border-radius:6px;">👤 登录</button>
       </div>
     </div>
   </header>
@@ -319,6 +320,9 @@
         <div id="charge-recommend" class="charge-indicator"></div>
       </div>
     </div>
+    <!-- 悬浮提示图 -->
+    <img id="tip-float" src="games/hoop/pictures/tip.png" alt="提示" />
+
     <div id="dunk-badge">
       <video id="dunk-video" src="games/hoop/video/koulandonghua.mp4" muted playsinline></video>
     </div>
@@ -468,7 +472,9 @@
 <!-- ============================================================ -->
 <!-- 应用模块 (按依赖顺序加载) -->
 <!-- ============================================================ -->
+<script src="js/api-client.js"></script>
 <script src="js/ai-report.js"></script>
+<script src="js/dashboard.js"></script>
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/state.js"></script>
@@ -504,6 +510,21 @@
     <canvas id="cam-canvas-side" style="display:none"></canvas>
   </div>
 </div>
+<!-- 登录/注册弹窗 -->
+<div id="auth-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:20000;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;">
+  <div style="background:rgba(10,8,30,0.97);border:2px solid #a855f7;border-radius:16px;padding:30px;width:340px;">
+    <h3 style="color:#e2e8f0;margin-bottom:20px;text-align:center;" id="auth-title">👤 登录</h3>
+    <input id="auth-user" placeholder="用户名" style="width:100%;padding:10px;margin-bottom:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#e2e8f0;font-size:0.9rem;">
+    <input id="auth-pass" type="password" placeholder="密码" style="width:100%;padding:10px;margin-bottom:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#e2e8f0;font-size:0.9rem;">
+    <input id="auth-email" placeholder="邮箱 (注册时需要)" style="width:100%;padding:10px;margin-bottom:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#e2e8f0;font-size:0.9rem;display:none;">
+    <div id="auth-msg" style="color:#f87171;font-size:0.75rem;margin-bottom:8px;min-height:18px;"></div>
+    <button id="auth-submit" style="width:100%;padding:10px;background:#a855f7;border:none;border-radius:8px;color:#fff;font-size:0.95rem;cursor:pointer;">登 录</button>
+    <div style="text-align:center;margin-top:12px;font-size:0.8rem;color:#94a3b8;">
+      <span id="auth-switch" style="color:#a855f7;cursor:pointer;">没有账号？注册</span>
+    </div>
+  </div>
+</div>
+
 <!-- 全局退出确认遮罩 (ESC暂停时显示) -->
 <div id="quit-overlay" style="display:none;">
   <button id="quit-overlay-btn">✕ 退出游戏</button>
@@ -511,7 +532,93 @@
 
 <!-- 卡路里报告面板遮罩锁 -->
 <div id="kcal-backdrop" style="display:none;" onclick="AIReport.close()"></div>
-<!-- 卡路里报告面板 -->
+<!-- ============================================================ -->
+<!-- 独立数据仪表盘 -->
+<!-- ============================================================ -->
+<div id="screen-dashboard" class="screen">
+  <header class="nav-header">
+    <div class="nav-inner">
+      <div class="nav-brand"><span class="nav-logo">📊</span><span class="nav-title">运动数据仪表盘</span></div>
+      <div class="nav-status" style="display:flex;align-items:center;gap:10px;">
+        <span id="dash-sync-status" style="font-size:0.7rem;color:#94a3b8;"></span>
+        <button id="dash-sync-btn" title="同步本地数据到服务器" style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);color:#4ade80;font-size:0.7rem;padding:4px 10px;border-radius:6px;cursor:pointer;">🔄 同步数据</button>
+        <button id="dash-back-btn" class="nav-badge" style="cursor:pointer;background:rgba(168,85,247,0.3);border:1px solid rgba(168,85,247,0.5);color:#c4b5fd;font-size:0.75rem;padding:4px 12px;border-radius:6px;">← 返回大厅</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab 切换栏 (sticky) -->
+  <div class="dash-tabs" style="max-width:1100px;margin:0 auto;padding:8px 20px 0;display:flex;gap:4px;">
+    <button class="dash-tab active" data-dtab="overview" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.4);color:#e2e8f0;padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:0.85rem;border-bottom:none;">📊 数据概览</button>
+    <button class="dash-tab" data-dtab="leaderboard" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#94a3b8;padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:0.85rem;border-bottom:none;">🏆 排行榜</button>
+    <button class="dash-tab" data-dtab="social" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#94a3b8;padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:0.85rem;border-bottom:none;">👥 好友动态</button>
+  </div>
+
+  <div class="dash-content-row" style="max-width:1100px;margin:20px auto;padding:0 20px;display:flex;gap:16px;align-items:flex-start;">
+
+    <!-- ========== Tab 1: 数据概览 ========== -->
+    <div id="dash-panel-overview" style="flex:1;min-width:0;">
+      <div class="kcal-summary-row" id="dash-summary"></div>
+      <div class="kcal-settings-row" id="dash-settings"></div>
+      <canvas id="dash-chart" width="600" height="220" style="width:100%;background:rgba(0,0,0,0.2);border-radius:10px;margin-bottom:14px;"></canvas>
+      <div style="display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+        <canvas id="dash-pie" width="300" height="180" style="flex-shrink:0;background:rgba(0,0,0,0.2);border-radius:8px;"></canvas>
+        <div style="flex:1;min-width:200px;">
+          <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:8px;">📋 最近记录</div>
+          <div class="kcal-table-wrap" style="max-height:180px;"><table id="dash-table"><thead><tr><th>日期</th><th>游戏</th><th>kcal</th><th>时长</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Tab 2: 排行榜 ========== -->
+    <div id="dash-panel-leaderboard" style="display:none;flex:1;min-width:0;">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="lb-scope-btn active" data-lbscope="today" style="background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.5);color:#e2e8f0;padding:6px 16px;border-radius:20px;cursor:pointer;font-size:0.8rem;">🔥 今日</button>
+        <button class="lb-scope-btn" data-lbscope="week" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;padding:6px 16px;border-radius:20px;cursor:pointer;font-size:0.8rem;">📅 本周</button>
+        <button class="lb-scope-btn" data-lbscope="all" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;padding:6px 16px;border-radius:20px;cursor:pointer;font-size:0.8rem;">👑 总榜</button>
+      </div>
+      <div id="dash-leaderboard-list" style="background:rgba(0,0,0,0.2);border-radius:12px;padding:16px;min-height:300px;margin-bottom:24px;">
+        <div style="text-align:center;color:#64748b;padding:40px;">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ========== Tab 3: 好友动态 ========== -->
+    <div id="dash-panel-social" style="display:none;flex:1;min-width:0;margin-bottom:24px;">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <!-- 好友列表 -->
+        <div style="flex:1;min-width:250px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <span style="color:#e2e8f0;font-weight:bold;flex-shrink:0;">👥 好友</span>
+            <input id="social-search-input" placeholder="搜索用户名关注..." style="flex:1;min-width:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:0.75rem;">
+            <button id="social-search-btn" style="background:#a855f7;border:none;border-radius:6px;padding:6px 12px;color:#fff;cursor:pointer;font-size:0.75rem;flex-shrink:0;">+ 关注</button>
+          </div>
+          <div id="dash-friends-list" style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px;min-height:200px;max-height:400px;overflow-y:auto;">
+            <div style="text-align:center;color:#64748b;padding:30px;">请先登录以查看好友</div>
+          </div>
+        </div>
+        <!-- 动态流 -->
+        <div style="flex:1.5;min-width:280px;">
+          <div style="color:#e2e8f0;font-weight:bold;margin-bottom:12px;">📡 好友动态</div>
+          <div id="dash-feed-list" style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px;min-height:200px;max-height:400px;overflow-y:auto;">
+            <div style="text-align:center;color:#64748b;padding:30px;">请先登录以查看动态</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：AI教练 (始终显示，sticky定位) -->
+    <div class="dash-ai-panel">
+      <div style="color:#a855f7;font-weight:bold;font-size:1rem;margin-bottom:12px;flex-shrink:0;">🤖 AI健身教练「卡卡」</div>
+      <div id="dash-ai-reply" style="flex:1;overflow-y:auto;font-size:0.8rem;line-height:1.6;margin-bottom:10px;min-height:80px;"></div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <input id="dash-ai-input" placeholder="问问卡卡..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:8px;color:#e2e8f0;font-size:0.8rem;outline:none;">
+        <button id="dash-ai-send" style="background:#a855f7;border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:0.8rem;flex-shrink:0;">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 卡路里报告弹窗 (保留, 从大厅kcal徽章打开) -->
 <div id="kcal-report-panel" style="display:none;">
   <div class="kcal-report-header">
     <span>📊 卡路里数据报告</span>

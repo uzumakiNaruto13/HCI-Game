@@ -14,6 +14,7 @@ services = [
     ("手机IMU中继",      [sys.executable, "ws_server.py"]),
     ("侧摄像头AI",       [sys.executable, "sidecam_processor.py"]),
     ("卡路里AI教练",     [sys.executable, "kcal_ai_service.py"]),
+    ("FastAPI后端",      [sys.executable, "-m", "uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]),
 ]
 
 procs = []

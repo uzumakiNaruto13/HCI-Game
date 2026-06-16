@@ -274,15 +274,6 @@ GalgameGame.prototype.checkAndLaunch = function () {
     });
 };
 
-GalgameGame.prototype.checkServerStatus = function () {
-  var self = this;
-  fetch('games/galgame/game/index.html', { mode: 'no-cors' }).then(function() {
-    self.launchGame();
-  }).catch(function() {
-    self.status = 'Preparing... | 准备中...';
-  });
-};
-
 GalgameGame.prototype.launchGame = function () {
   var canvas = this.canvas || document.getElementById('gameCanvas2');
   if (canvas) {

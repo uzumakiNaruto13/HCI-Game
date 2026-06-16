@@ -52,11 +52,3 @@ function randRange(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-/** 色彩插值 (绿→黄→红) 按比率 0=绿 1=红 */
-function confidenceColor(ratio) {
-  if (ratio > 0.8) return { fill: '#4ade80', glow: '#22c55e' };
-  if (ratio > 0.6) return { fill: '#a3e635', glow: '#84cc16' };
-  if (ratio > 0.45) return { fill: '#ffca28', glow: '#f59e0b' };
-  if (ratio > 0.2) return { fill: '#f97316', glow: '#ef4444' };
-  return { fill: '#ef4444', glow: '#dc2626' };
-}

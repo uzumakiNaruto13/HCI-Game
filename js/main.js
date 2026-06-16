@@ -115,8 +115,6 @@ function updateLobbyUI(gameIdx) {
 
 // ---- 系统初始化 ----
 function initSystem() {
-  console.log('[系统] 初始化 · 科幻游戏UI模式');
-
   // === 游戏选择卡片 (右侧面板) ===
   var tooltip = document.getElementById('game-tooltip');
   document.querySelectorAll('.gsc').forEach(function (card) {
@@ -124,6 +122,12 @@ function initSystem() {
       var gameIdx = parseInt(this.dataset.game);
       STATE.gameMode = gameIdx;
       updateLobbyUI(gameIdx);
+    });
+    // 双击直接进入游戏
+    card.addEventListener('dblclick', function () {
+      var gameIdx = parseInt(this.dataset.game);
+      STATE.gameMode = gameIdx;
+      startGame(gameIdx);
     });
     // hover 浮窗
     card.addEventListener('mouseenter', function (e) {
@@ -147,6 +151,9 @@ function initSystem() {
       var gameIdx = parseInt(this.dataset.nav);
       STATE.gameMode = gameIdx;
       updateLobbyUI(gameIdx);
+    });
+    item.addEventListener('dblclick', function () {
+      startGame(parseInt(this.dataset.nav));
     });
   });
 
@@ -368,12 +375,10 @@ function initSystem() {
           STATE.gameMode = Math.min(GAME_META.length - 1, STATE.gameMode + 1);
           updateLobbyUI(STATE.gameMode);
           gestureCooldown = 25;
-          console.log('[手势] 往下滑动：切换到下一个游戏');
         } else if (triggered === -1) {
           STATE.gameMode = Math.max(0, STATE.gameMode - 1);
           updateLobbyUI(STATE.gameMode);
           gestureCooldown = 25;
-          console.log('[手势] 往上滑动：切换到上一个游戏');
         }
       }
 
@@ -404,18 +409,16 @@ function initSystem() {
           nodCount++;
           nodTimer = 60;
           window.nodAccumY = 0;
-          console.log('[手势] 成功检测到 1 次点头！目前总计: ' + nodCount);
         }
 
         // 超时重置
-        if (nodTimer <= 0 && nodCount > 0) { nodCount = 0; console.log('[手势] 点头超时，已重置'); }
+        if (nodTimer <= 0 && nodCount > 0) { nodCount = 0; }
 
         // 缓慢低头等误差清理
         if (Math.abs(window.nodAccumY) > 0.15) { window.nodAccumY = 0; }
 
         // 2 次点头触发
         if (nodCount >= 2) {
-          console.log('[手势] 达成 2 次点头，进入游戏！');
           nodCount = 0; nodState = 0; window.nodAccumY = 0;
           startGame(STATE.gameMode);
         }
@@ -423,23 +426,101 @@ function initSystem() {
     });
   }
 
-  // 初始状态
   // === 独立卡路里追踪器 (localStorage 持久化) ===
   window._totalKcal = parseFloat(localStorage.getItem('hcigame_total_kcal') || '0');
   var totalEl = document.getElementById('totalKcal');
   if (totalEl) totalEl.textContent = fmt(window._totalKcal, 1);
 
+  // === 悬浮提示图：点击滑出，30秒后复现 ===
+  var tipImg = document.getElementById('tip-float');
+  if (tipImg) {
+    tipImg.addEventListener('click', function () {
+      tipImg.classList.add('dismissed');
+      setTimeout(function () { tipImg.classList.remove('dismissed'); }, 30000);
+    });
+  }
+
+  // === 登录/注册弹窗 ===
+  var authModal = document.getElementById('auth-modal');
+  var isRegister = false;
+  document.getElementById('btn-login').onclick = function () {
+    if (API.isLoggedIn()) { API.setToken(''); localStorage.removeItem('hcigame_token'); this.textContent = '👤 登录'; return; }
+    authModal.style.display = 'flex';
+  };
+  document.getElementById('auth-switch').onclick = function () {
+    isRegister = !isRegister;
+    document.getElementById('auth-title').textContent = isRegister ? '📝 注册' : '👤 登录';
+    document.getElementById('auth-submit').textContent = isRegister ? '注 册' : '登 录';
+    document.getElementById('auth-email').style.display = isRegister ? 'block' : 'none';
+    document.getElementById('auth-switch').textContent = isRegister ? '已有账号？登录' : '没有账号？注册';
+  };
+  document.getElementById('auth-submit').onclick = function () {
+    var u = document.getElementById('auth-user').value.trim();
+    var p = document.getElementById('auth-pass').value.trim();
+    var e = document.getElementById('auth-email').value.trim();
+    var msg = document.getElementById('auth-msg');
+    if (!u || !p) { msg.textContent = '请填写用户名和密码'; return; }
+    var fn = isRegister ? API.register(u, p, e) : API.login(u, p);
+    fn.then(function (r) {
+      if (r.token) {
+        authModal.style.display = 'none';
+        document.getElementById('btn-login').textContent = '👤 ' + u;
+        msg.textContent = '';
+
+        // Phase 2: 自动同步本地数据到服务器
+        if (!isRegister) {
+          var sessions = [];
+          try { sessions = JSON.parse(localStorage.getItem('hcigame_sessions') || '[]'); } catch (ex) {}
+          var totalKcal = parseFloat(localStorage.getItem('hcigame_total_kcal') || '0');
+          if (sessions.length > 0) {
+            API.syncLocalData(sessions, totalKcal);
+          }
+          // 同步用户设置 (体重/目标)
+          var cfg = {};
+          try { cfg = JSON.parse(localStorage.getItem('hcigame_settings') || '{}'); } catch (ex) {}
+          if (cfg.weight || cfg.dailyGoal) {
+            API.updateProfile({
+              weight: cfg.weight, height: cfg.height, age: cfg.age, gender: cfg.gender,
+              daily_goal: cfg.dailyGoal, weekly_goal: cfg.weeklyGoal
+            });
+          }
+        }
+
+        // Phase 3: 请求推送通知权限
+        if (!_notifRequested && 'Notification' in window && Notification.permission === 'default') {
+          _notifRequested = true;
+          setTimeout(function () {
+            Notification.requestPermission();
+          }, 2000);
+        }
+      }
+      else { msg.textContent = r.detail || '操作失败'; }
+    });
+  };
+  authModal.onclick = function (e) { if (e.target === authModal) authModal.style.display = 'none'; };
+  // 自动恢复登录
+  if (API.isLoggedIn()) {
+    API.me().then(function (u) { if (u.username) document.getElementById('btn-login').textContent = '👤 ' + u.username; });
+  }
+
+  // Phase 3: 首次交互请求通知权限
+  var _notifRequested = false;
+  document.addEventListener('click', function _reqNotif() {
+    if (_notifRequested) return;
+    _notifRequested = true;
+    if ('Notification' in window && Notification.permission === 'default') {
+      setTimeout(function () { Notification.requestPermission(); }, 3000);
+    }
+  }, { once: false });
+
   updateLobbyUI(STATE.gameMode);
 
-  console.log('[系统] 初始化完成 · 科幻游戏UI模式 · 等待用户选择游戏');
   return true;
 }
 
 // ---- DOM Ready ----
 document.addEventListener('DOMContentLoaded', function () {
   setTimeout(function () {
-    if (!initSystem()) {
-      console.error('[系统] 初始化失败');
-    }
+    initSystem();
   }, 200);
 });

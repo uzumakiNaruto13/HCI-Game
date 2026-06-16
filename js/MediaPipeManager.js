@@ -49,8 +49,7 @@ class MediaPipeManager {
         }
 
         var ok = await this._tryLocalCamera();
-        if (ok) { console.log('[MediaPipeManager] 本地摄像头已连接'); this.initPose(); }
-        else { console.warn('[MediaPipeManager] 本地摄像头不可用'); }
+        if (ok) { this.initPose(); }
     }
 
     async _tryLocalCamera() {
@@ -65,7 +64,7 @@ class MediaPipeManager {
     }
 
     initPose() {
-        if (typeof Pose === 'undefined') { console.warn('[MediaPipeManager] Pose 未加载'); return; }
+        if (typeof Pose === 'undefined') { return; }
 
         var self = this;
         this.pose = new Pose({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/' + f; } });
@@ -138,7 +137,6 @@ class MediaPipeManager {
     subscribe(cb) { if (!this.listeners.includes(cb)) { this.listeners.push(cb); } }
     unsubscribe(cb) { this.listeners = this.listeners.filter(function (x) { return x !== cb; }); }
     getStream() { return this.stream; }
-    getVideoElement() { return this.videoElement; }
 }
 
 window.mpManager = new MediaPipeManager();

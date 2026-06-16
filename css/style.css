@@ -39,6 +39,9 @@
 
 /* --- Reset & Base --- */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+button, input, textarea, select, table, kbd {
+  font-family: inherit;
+}
 body {
   font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
   background: var(--bg-deep);
@@ -1108,3 +1111,178 @@ h2.grad { font-size: 1.4rem; margin-bottom: 0.5rem; }
 
 #kcal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;backdrop-filter:blur(2px);}
 
+/* ============================================================
+   DASHBOARD SCREEN — override .screen overflow for scrolling
+   ============================================================ */
+#screen-dashboard.show,
+#screen-results.show {
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-items: stretch;
+}
+
+/* dashboard header stays sticky */
+#screen-dashboard > .nav-header {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+}
+
+/* tab bar — sticky below header */
+.dash-tabs {
+  position: sticky;
+  top: 52px;  /* header height */
+  z-index: 105;
+  background: var(--bg-deep);  /* opaque so content doesn't show through */
+  padding-top: 4px;
+}
+
+/* main scrollable content area */
+.dash-content-row {
+  flex: 1;
+}
+
+/* summary cards row — prevent overflow on narrow screens */
+.kcal-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.kcal-summary-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  min-width: 0;
+}
+.kcal-summary-card .val {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #fbbf24;
+  word-break: break-word;
+}
+.kcal-summary-card .lbl {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* settings row — tighter on mobile */
+.kcal-settings-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 0.75rem;
+}
+
+/* leaderboard list items never overflow */
+#dash-leaderboard-list > div {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* friends list & feed — restrain text */
+#dash-friends-list,
+#dash-feed-list {
+  word-break: break-word;
+}
+
+/* social panel two-col collapses gracefully */
+@media (max-width: 750px) {
+  #dash-panel-social > div {
+    flex-direction: column !important;
+  }
+  #dash-panel-social > div > div {
+    min-width: 100% !important;
+  }
+}
+
+/* AI coach panel — sticky inside scrollable area */
+.dash-ai-panel {
+  width: 340px;
+  background: rgba(10,8,30,0.92);
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  position: sticky;
+  top: 120px;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+
+/* on narrow screens, AI panel goes full-width and non-sticky */
+@media (max-width: 1000px) {
+  .dash-content-row {
+    flex-direction: column !important;
+  }
+  .dash-ai-panel {
+    width: 100%;
+    height: 350px;
+    position: static;
+    top: auto;
+  }
+  .dash-tabs {
+    top: 48px;
+  }
+}
+
+#kcal-ai-input,
+#dash-ai-input,
+#social-search-input {
+  font-family: inherit;
+}
+
+/* leaderboard scope buttons */
+.lb-scope-btn {
+  font-family: inherit;
+  transition: all 0.25s;
+}
+.lb-scope-btn:hover {
+  background: rgba(168,85,247,0.15) !important;
+  border-color: rgba(168,85,247,0.5) !important;
+}
+
+/* dash tab buttons */
+.dash-tab {
+  transition: all 0.25s;
+  font-family: inherit;
+}
+.dash-tab:hover {
+  background: rgba(168,85,247,0.12) !important;
+  color: #e2e8f0 !important;
+}
+
+/* table in dashboard never overflows */
+.kcal-table-wrap {
+  overflow-x: auto;
+}
+#dash-table,
+#kcal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+#dash-table th,
+#kcal-table th {
+  background: rgba(168,85,247,0.2);
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.7rem;
+  color: #a78bfa;
+  position: sticky;
+  top: 0;
+}
+#dash-table td,
+#kcal-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}

@@ -13,15 +13,6 @@ var UIManager = (function () {
     if (el) el.classList.add('show');
   }
 
-  /** 消息设置 */
-  function setMsg(id, text) { var el = $(id); if (el) el.textContent = text; }
-  function setErr(id, text) {
-    var el = $(id);
-    if (!el) return;
-    el.textContent = text;
-    el.style.display = text ? 'block' : 'none';
-  }
-
   /** 动作反馈弹字 */
   function showFeedback(elementId, text, grade, combo) {
     var el = $(elementId);
@@ -44,14 +35,6 @@ var UIManager = (function () {
     el.offsetHeight; // 强制回流
     el.style.animation = 'feedbackPop .6s ease-out forwards';
     setTimeout(function () { el.style.display = 'none'; }, 700);
-  }
-
-  /** HP条 */
-  function updateHP(hpValue, barId, textId) {
-    var bar = $(barId);
-    var txt = $(textId);
-    if (bar) bar.style.width = clamp(hpValue, 0, 100) + '%';
-    if (txt) txt.textContent = Math.round(clamp(hpValue, 0, 100)) + '%';
   }
 
   /** 雷达图 */
@@ -135,10 +118,7 @@ var UIManager = (function () {
 
   return {
     showScreen: showScreen,
-    setMsg: setMsg,
-    setErr: setErr,
     showFeedback: showFeedback,
-    updateHP: updateHP,
     drawRadar: drawRadar
   };
 

@@ -1,2 +1,0 @@
-supermemo2
-tests

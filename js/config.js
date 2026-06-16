@@ -4,5 +4,3 @@
 
 // 游戏全局参数
 const GAME_SPEED = 0.55;          // 游戏速度倍率 (1.0=原始速度, 越小越慢)
-const READY_HOLD_TIME = 1000;     // 准备界面倒计时 (ms)
-const COUNTDOWN_SECONDS = 3;      // 倒计时秒数

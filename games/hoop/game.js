@@ -83,7 +83,6 @@ KobeShootingGame.prototype.setup = function () {
   this.ui.setupDunkVideo(this);
   this.defendersHandler.initTestDefenders(this);
 
-  if (this.exclamationSprite) this.scene.add(this.exclamationSprite);
   this.sceneManager.updateScoreDisplay(this);
 
   this._setupKeyboard();
@@ -225,8 +224,12 @@ KobeShootingGame.prototype.performSprint = function () {
 // ====================================================================
 KobeShootingGame.prototype._startGameLoop = function () {
   var self = this;
-  (function loop() { if (!self.running) return; self._animFrameId = requestAnimationFrame(loop); self._update3D(); })();
+  if (this._running) return;
+  this._running = true;
+  (function loop() { if (!self._running) return; self._animFrameId = requestAnimationFrame(loop); self._update3D(); })();
 };
+// ESC 暂停恢复需要调用 startLoop
+KobeShootingGame.prototype.startLoop = KobeShootingGame.prototype._startGameLoop;
 
 KobeShootingGame.prototype._update3D = function () {
   this.frameCount++;

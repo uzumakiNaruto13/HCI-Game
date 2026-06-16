@@ -1,20 +1,69 @@
 // ====================================================================
 // ai-report.js — 卡路里数据报告面板（增强版）
-// MET计算 + 目标设定 + Streak + 饼图 + AI教练
+// 基于 Harris-Benedict BMR × MET × 时间的科学卡路里模型
+// 参考: 多参数线性模型 (体重+身高+年龄) + 物理兜底保护
 // ====================================================================
 
 var AIReport = {
   _sessions: [],
-  _settings: { weight: 70, dailyGoal: 100, weeklyGoal: 500 },
+  _settings: { weight: 70, height: 175, age: 25, dailyGoal: 100, weeklyGoal: 500 },
 
-  // MET 代谢当量表 (每游戏)
+  // MET 代谢当量表 (每游戏) — 1 MET = 1 kcal/kg/h (静息代谢)
   _MET: { '🏃 地铁跑酷': 6.0, '🏀 投篮挑战': 7.5, '🎮 Galgame': 1.5, '🧩 体感方块': 3.5 },
+
+  /**
+   * 计算基础代谢率 BMR (Harris-Benedict 公式)
+   * BMR = 88.362 + 13.397×W + 4.799×H - 5.677×A  (男性)
+   * BMR = 447.593 + 9.247×W + 3.098×H - 4.330×A  (女性)
+   * @returns {number} 每日基础代谢 (kcal/day)，物理兜底 ≥ 0
+   */
+  _calculateBMR: function (weight, height, age, gender) {
+    var bmr;
+    if (gender === 'female') {
+      bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.330 * age;
+    } else {
+      bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+    }
+    return Math.max(0, bmr);  // 物理兜底 — 极端输入下不产生负数
+  },
+
+  /**
+   * 核心卡路里计算公式
+   * kcal = MET × BMR/24 × duration_hours
+   *      = MET × BMR × duration_sec / 86400
+   *
+   * 系数结构 (展开后等价于):
+   *   calories_per_minute = (MET×13.397/1440)×W + (MET×4.799/1440)×H - (MET×5.677/1440)×A + (MET×88.362/1440)
+   *   即: a×W + b×H + c×A + d    (四参数线性模型，同参考公式结构)
+   */
+  _calculateCalories: function (gameName, durationSec) {
+    var met = this._MET[gameName] || 4;
+    var w = this._settings.weight || 70;
+    var h = this._settings.height || 175;
+    var a = this._settings.age || 25;
+    var g = this._settings.gender || 'male';
+
+    var bmr = this._calculateBMR(w, h, a, g);
+    // MET × BMR(kcal/day) × duration(秒) / 86400(秒/天)
+    var kcal = met * bmr * (durationSec / 86400);
+    return Math.max(0, parseFloat(kcal.toFixed(1)));  // 物理兜底
+  },
 
   init: function () {
     var raw = localStorage.getItem('hcigame_sessions');
     if (raw) { try { this._sessions = JSON.parse(raw); } catch (e) { this._sessions = []; } }
     var cfg = localStorage.getItem('hcigame_settings');
-    if (cfg) { try { var s = JSON.parse(cfg); this._settings.weight = s.weight || 70; this._settings.dailyGoal = s.dailyGoal || 100; this._settings.weeklyGoal = s.weeklyGoal || 500; } catch (e) {} }
+    if (cfg) {
+      try {
+        var s = JSON.parse(cfg);
+        this._settings.weight = s.weight || 70;
+        this._settings.height = s.height || 175;
+        this._settings.age = s.age || 25;
+        this._settings.gender = s.gender || 'male';
+        this._settings.dailyGoal = s.dailyGoal || 100;
+        this._settings.weeklyGoal = s.weeklyGoal || 500;
+      } catch (e) {}
+    }
     this._bindUI();
     this._updateBadge();
   },
@@ -23,7 +72,7 @@ var AIReport = {
     var self = this;
     setTimeout(function () {
       var badge = document.getElementById('kcal-badge');
-      if (badge) badge.onclick = function () { self.open(); };
+      if (badge) badge.onclick = function () { Dashboard.open(); };
     }, 500);
     document.addEventListener('click', function (e) {
       if (e.target.id === 'kcal-report-close') self.close();
@@ -45,10 +94,10 @@ var AIReport = {
     var now = new Date();
     var date = now.toISOString().slice(0, 10);
     var hour = now.getHours();
-    // MET 精确计算
-    var met = this._MET[gameName] || 4;
-    var metKcal = met * this._settings.weight * (durationSec / 3600);
-    var finalKcal = metKcal > 0 ? parseFloat(metKcal.toFixed(1)) : parseFloat(kcal.toFixed(1));
+    // BMR × MET 科学计算 (多参数线性模型)
+    var finalKcal = this._calculateCalories(gameName, durationSec);
+    // 兜底: 如果计算结果为0但局内有累加值，使用局内值
+    if (finalKcal <= 0 && kcal > 0) finalKcal = parseFloat(kcal.toFixed(1));
     this._sessions.push({ date: date, hour: hour, game: gameName, kcal: finalKcal, score: score, duration: Math.round(durationSec) });
     var cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
     this._sessions = this._sessions.filter(function (s) { return s.date >= cutoff; });
@@ -132,9 +181,12 @@ var AIReport = {
 
   _saveSettings: function () {
     var w = parseFloat(document.getElementById('kcal-set-weight').value) || 70;
+    var h = parseFloat(document.getElementById('kcal-set-height').value) || 175;
+    var age = parseInt(document.getElementById('kcal-set-age').value) || 25;
+    var g = document.getElementById('kcal-set-gender') ? document.getElementById('kcal-set-gender').value : 'male';
     var d = parseInt(document.getElementById('kcal-set-daily').value) || 100;
     var wk = parseInt(document.getElementById('kcal-set-weekly').value) || 500;
-    this._settings = { weight: w, dailyGoal: d, weeklyGoal: wk };
+    this._settings = { weight: w, height: h, age: age, gender: g, dailyGoal: d, weeklyGoal: wk };
     localStorage.setItem('hcigame_settings', JSON.stringify(this._settings));
     this._updateBadge();
     this.open();
@@ -241,11 +293,18 @@ var AIReport = {
       '<div class="kcal-summary-card"><div class="val">' + weekKcal.toFixed(0) + '</div><div class="lbl">本周 /' + this._settings.weeklyGoal + ' (' + weekPct + '%)</div></div>' +
       '<div class="kcal-summary-card"><div class="val">' + totalMin + '</div><div class="lbl">累计分钟</div></div>';
 
-    // 设定面板
+    // 设定面板 (体重/身高/年龄/性别/目标)
+    var s = this._settings;
+    var genderOpt = '<select id="kcal-set-gender" style="width:52px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">' +
+      '<option value="male"' + (s.gender === 'male' ? ' selected' : '') + '>男</option>' +
+      '<option value="female"' + (s.gender === 'female' ? ' selected' : '') + '>女</option></select>';
     document.getElementById('kcal-settings').innerHTML =
-      '<span style="color:#94a3b8;font-size:0.75rem;">体重</span><input id="kcal-set-weight" value="' + this._settings.weight + '" style="width:50px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;">kg' +
-      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:10px;">日目标</span><input id="kcal-set-daily" value="' + this._settings.dailyGoal + '" style="width:50px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;">kcal' +
-      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:10px;">周目标</span><input id="kcal-set-weekly" value="' + this._settings.weeklyGoal + '" style="width:50px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;">kcal' +
+      '<span style="color:#94a3b8;font-size:0.75rem;">体重</span><input id="kcal-set-weight" value="' + s.weight + '" style="width:44px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">kg' +
+      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">身高</span><input id="kcal-set-height" value="' + s.height + '" style="width:44px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">cm' +
+      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">年龄</span><input id="kcal-set-age" value="' + s.age + '" style="width:38px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">岁' +
+      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">性别</span>' + genderOpt +
+      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:10px;">日目标</span><input id="kcal-set-daily" value="' + s.dailyGoal + '" style="width:44px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">kcal' +
+      '<span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">周目标</span><input id="kcal-set-weekly" value="' + s.weeklyGoal + '" style="width:44px;margin:0 8px 0 4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#e2e8f0;padding:4px;font-size:0.7rem;">kcal' +
       '<button id="kcal-save-settings" style="margin-left:10px;background:#a855f7;border:none;border-radius:6px;padding:4px 12px;color:#fff;cursor:pointer;font-size:0.75rem;">保存</button>';
 
     // 表格
@@ -294,9 +353,7 @@ var AIReport = {
     var self = this;
     var fallback = '💪 今日' + today.kcal.toFixed(0) + 'kcal (' + dailyPct + '%)' + (streak > 1 ? '，连续' + streak + '天打卡！' : '') + (dailyPct >= 100 ? ' 🎉目标达成！' : '，还差' + (this._settings.dailyGoal - today.kcal).toFixed(0) + 'kcal');
 
-    for (var i = 0; i < self._chatHistory.length; i++) {
-      if (self._chatHistory[i].id === 'ai-stream') delete self._chatHistory[i].id;
-    }
+    self._chatHistory = self._chatHistory.filter(function (m) { return m.id !== 'ai-stream'; });
     var wsSent = false, idleTimer = null;
     try {
       var ws = new WebSocket('ws://localhost:8083');
