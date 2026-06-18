@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from websockets import serve
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 API_KEY = os.getenv("MIMO_API_KEY", "")
 API_URL = os.getenv("MIMO_API_URL", "https://token-plan-cn.xiaomimimo.com/v1/chat/completions")
